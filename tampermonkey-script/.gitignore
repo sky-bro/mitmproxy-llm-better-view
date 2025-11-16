@@ -8,7 +8,9 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-
+dist/*
+!dist/mitmweb-llm-better-view.user.js
+!dist/
 dist-ssr
 *.local
 

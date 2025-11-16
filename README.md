@@ -3,10 +3,10 @@
 ![compare](./docs/compare-1.png)
 ![](https://raw.githubusercontent.com/slow-groovin/mitmproxy-llm-better-view/refs/heads/main/docs/mitm-better-view.webp)
 
-[中文文档](./docs/README_CN.md)
+[中文文档](README_CN.md)
 
 ## Quick Start
-This project provides two tools (**The two are conflicting**):
+This project provides two tools (**You can use both of them**):
 1. mitmproxy addon scripts, which can be added when executing mitmproxy/mitmweb
 2. (mitmweb only) Tampermonkey script
 
@@ -31,9 +31,8 @@ scripts:
 
 ### Method 2: Tampermonkey script
 
-visit and install:
-
-https://greasyfork.org/scripts/540917-mitmproxy-llm-better-view
+1. make sure you have tampermonkey extension installed in your browser
+2. install the tampermonkey script by opening [mitmweb-llm-better-view.user.js](https://raw.githubusercontent.com/sky-bro/mitmproxy-llm-better-view/refs/heads/main/tampermonkey-script/dist/mitmweb-llm-better-view.user.js)
 
 ## How It Works
 ### Method 1: mitmproxy addon scripts
@@ -42,4 +41,4 @@ This uses mitmproxy's [contentviews](https://docs.mitmproxy.org/stable/addons/co
 
 ### Method 2: Tampermonkey script
 
-Uses JS to fetch data on the page, render it as static HTML, and embed it into the page via an iframe.
+Uses JS to fetch data on the page and directly render it within the mitmweb interface for better viewing of LLM API requests and responses.

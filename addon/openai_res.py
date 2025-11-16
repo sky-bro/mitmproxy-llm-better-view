@@ -15,10 +15,31 @@ def multi_line_splitter(line: int) -> str:
 def indent_text(text: str, n: int) -> str:
     """将多行文本整体缩进 n 个空格"""
     indent = " " * n
+    # 确保在缩进前先尝试美化JSON字符串
+    try:
+        parsed_json = json.loads(text)
+        text = json.dumps(parsed_json, indent=4, ensure_ascii=False)
+    except json.JSONDecodeError:
+        # 如果不是有效的JSON，则保持原样
+        pass
     indented_lines = [
         (indent + line) if line.strip() else line for line in text.splitlines()
     ]
     return "\n".join(indented_lines)
+
+
+def format_json_text(text: str) -> str:
+    """将JSON文本格式化为markdown代码块"""
+    if not text:
+        return text
+    # 尝试解析JSON并美化
+    try:
+        parsed_json = json.loads(text)
+        formatted_json = json.dumps(parsed_json, indent=2, ensure_ascii=False)
+        return f"```json\n{formatted_json}\n```"
+    except json.JSONDecodeError:
+        # 如果不是有效的JSON，则保持原样
+        return text
 
 
 split_line = "\n----------------------------------\n"
@@ -68,15 +89,23 @@ def handle_response_choices(choices: List[Any]) -> str:
         # 处理消息内容
         message = choice.get("message", {})
         role = message.get("role", "N/A")
-        content = message.get("content", "N/A")
 
-        choices_result += f"### 📋Choice {index}   [finish_reason: `{finish_reason}`, role:`{role}`]\n"
-        choices_result += f"{split_line}{content}{split_line}"
+        choices_result += f"### 📋Choice {index} [finish_reason: `{finish_reason}`, role:`{role}`]\n"
+
+        # 显示reasoning_content（如果存在）
+        reasoning_content = message.get("reasoning_content", "").strip()
+        if reasoning_content:
+            choices_result += f"#### 🧠Think\n{split_line}{indent_text(reasoning_content, 4)}{split_line}"
+
+        # 显示聚合的文本内容
+        content = message.get("content", "").strip()
+        if content:
+            choices_result += f"#### 💬Content\n{split_line}{indent_text(content, 4)}{split_line}"
 
         # 处理工具调用，如果有的话
         tool_calls = message.get("tool_calls", [])
         if tool_calls:
-            choices_result += f"#### Tool Calls ({len(tool_calls)})\n"
+            choices_result += f"#### 🔨Tool Calls ({len(tool_calls)})\n"
             for j, tool_call in enumerate(tool_calls):
                 tool_id = tool_call.get("id", "N/A")
                 tool_type = tool_call.get("type", "N/A")
@@ -85,12 +114,10 @@ def handle_response_choices(choices: List[Any]) -> str:
                 arguments = function.get("arguments", "{}")
 
                 choices_result += f"##### Tool Call {j}\n"
-                choices_result += f"ID: {tool_id}\n"
-                choices_result += f"Type: {tool_type}\n"
-                choices_result += f"Function: {function_name}\n"
-                choices_result += (
-                    f"Arguments: {split_line}{indent_text(arguments, 4)}{split_line}"
-                )
+                choices_result += f"  - ID      : {tool_id}\n"
+                choices_result += f"  - Type    : {tool_type}\n"
+                choices_result += f"  - Function: {function_name}\n"
+                choices_result += f"  - Arguments: {split_line}{format_json_text(arguments)}{split_line}"
 
     return choices_result
 
@@ -104,7 +131,7 @@ def handle_system_fingerprint(body: Any) -> str:
 
 
 class OpenaiResp(Contentview):
-    name = "Openai Response"
+    name = "openai-response"
     syntax_highlight = "none"
 
     def prettify(
@@ -127,12 +154,12 @@ class OpenaiResp(Contentview):
         logging.info("prettify LLM Response body")
         obj = json.loads(data)
 
-        result = f"# LLM Response body \n \n"
+        # 处理选项/回复内容
+        choices = obj.get("choices", [])
+        result = f"# LLM Response ({len(choices)} choices) \n \n"
         result += handle_response_basis(obj)
         result += multi_line_splitter(2)
 
-        # 处理选项/回复内容
-        choices = obj.get("choices", [])
         if choices:
             result += handle_response_choices(choices)
             result += multi_line_splitter(2)

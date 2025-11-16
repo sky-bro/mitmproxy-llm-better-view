@@ -3,10 +3,10 @@
 ![对比图](./docs/compare-1.png)
 ![](https://raw.githubusercontent.com/slow-groovin/mitmproxy-llm-better-view/refs/heads/main/docs/mitm-better-view.webp)
 
-[English README](../README.md)
+[English README](README.md)
 
 ## 快速开始
-本项目提供了两种工具 (**两种方式冲突无法同时使用**)：
+本项目提供了两种工具 (**两种方式可同时使用**)：
 1. mitmproxy addon 脚本，可在 mitmproxy 运行时通过参数添加
 2. （仅支持 mitmweb）Tampermonkey 脚本
 
@@ -31,7 +31,8 @@ scripts:
 
 ### 方式2：Tampermonkey 脚本
 
-https://greasyfork.org/scripts/540917-mitmproxy-llm-better-view
+1. 浏览器安装了好tampermonkey插件
+2. 通过浏览器打开[mitmweb-llm-better-view.user.js](https://raw.githubusercontent.com/sky-bro/mitmproxy-llm-better-view/refs/heads/main/tampermonkey-script/dist/mitmweb-llm-better-view.user.js)来安装tampermonkey脚本 
 
 ## 工作原理
 ### 方式1：mitmproxy addon 脚本

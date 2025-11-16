@@ -1,4 +1,5 @@
 export type CallAction = { uuid: string, action: 'request' | 'response' }
+
 export type Flow = {
   id: string;
   intercepted: boolean;

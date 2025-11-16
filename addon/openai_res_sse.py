@@ -29,6 +29,20 @@ def indent_text(text: str, n: int) -> str:
     return "\n".join(indented_lines)
 
 
+def format_json_text(text: str) -> str:
+    """将JSON文本格式化为markdown代码块"""
+    if not text:
+        return text
+    # 尝试解析JSON并美化
+    try:
+        parsed_json = json.loads(text)
+        formatted_json = json.dumps(parsed_json, indent=2, ensure_ascii=False)
+        return f"```json\n{formatted_json}\n```"
+    except json.JSONDecodeError:
+        # 如果不是有效的JSON，则保持原样
+        return text
+
+
 split_line = "\n----------------------------------\n"
 
 
@@ -78,14 +92,15 @@ def parse_sse_data(data: bytes) -> List[Dict[str, Any]]:
     """解析SSE格式的数据流"""
     events = []
     text = data.decode("utf-8", errors="replace")
+    logging.debug(f"SSE Raw Data:\n{text}")
 
     # 按行分割
     lines = text.split("\n")
 
     for line in lines:
         line = line.strip()
-        if line.startswith("data: "):
-            data_content = line[6:]
+        if line.startswith("data:"):
+            data_content = line[5:]
 
             if data_content == "[DONE]":
                 continue
@@ -128,6 +143,7 @@ def handle_sse_choices(events: List[Dict[str, Any]]) -> str:
             if choice_index not in aggregated_choices:
                 aggregated_choices[choice_index] = {
                     "content": "",
+                    "reasoning_content": "",
                     "tool_calls": {},
                     "finish_reason": "N/A",
                     "role": "N/A",
@@ -142,6 +158,10 @@ def handle_sse_choices(events: List[Dict[str, Any]]) -> str:
             # 聚合内容 (stop)
             if delta.get("content"):
                 current_choice["content"] += delta.get("content")
+
+            # 聚合reasoning_content
+            if delta.get("reasoning_content"):
+                current_choice["reasoning_content"] += delta.get("reasoning_content")
 
             # 聚合工具调用 (tool_calls)
             if delta.get("tool_calls"):
@@ -187,17 +207,22 @@ def handle_sse_choices(events: List[Dict[str, Any]]) -> str:
         finish_reason = choice_data.get("finish_reason", "N/A")
         role = choice_data.get("role", "N/A")
 
-        choices_result += f"### 📋Choice {index}   [finish_reason: `{finish_reason}`, role:`{role}`]\n"
+        choices_result += f"### 📋Choice {index} [finish_reason: `{finish_reason}`, role:`{role}`]\n"
+
+        # 显示reasoning_content（如果存在）
+        reasoning_content = choice_data.get("reasoning_content", "").strip()
+        if reasoning_content:
+            choices_result += f"#### 🧠Think\n{split_line}{indent_text(reasoning_content, 4)}{split_line}"
 
         # 显示聚合的文本内容
         content = choice_data.get("content", "").strip()
         if content:
-            choices_result += f"{split_line}{indent_text(content, 4)}{split_line}"
+            choices_result += f"#### 💬Content\n{split_line}{indent_text(content, 4)}{split_line}"
 
         # 显示聚合的工具调用
         tool_calls = choice_data.get("tool_calls", {})
         if tool_calls:
-            choices_result += f"#### Tool Calls ({len(tool_calls)})\n"
+            choices_result += f"#### 🔨Tool Calls ({len(tool_calls)})\n"
             for j, tool_call_data in sorted(tool_calls.items()):
                 tool_id = tool_call_data.get("id", "N/A")
                 tool_type = tool_call_data.get("type", "N/A")
@@ -205,17 +230,17 @@ def handle_sse_choices(events: List[Dict[str, Any]]) -> str:
                 function_name = function.get("name", "N/A")
                 arguments = function.get("arguments", "{}")
 
-                choices_result += f"##### 🔨Tool Call {j}\n"
+                choices_result += f"##### Tool Call {j}\n"
                 choices_result += f"  - ID      : {tool_id}\n"
                 choices_result += f"  - Type    : {tool_type}\n"
                 choices_result += f"  - Function: {function_name}\n"
-                choices_result += f"  - Arguments: {split_line}{indent_text(arguments, 4)}{split_line}"
+                choices_result += f"  - Arguments: {split_line}{format_json_text(arguments)}{split_line}"
 
     return choices_result
 
 
 class OpenaiRespSSE(Contentview):
-    name = "OpenAI SSE Response"
+    name = "openai-sse-response"
     syntax_highlight = "none"
 
     def prettify(

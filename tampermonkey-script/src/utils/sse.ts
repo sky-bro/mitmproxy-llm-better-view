@@ -1,77 +1,23 @@
-// OpenAI SSE Response Types
-export interface OpenAISSEEvent {
-  id?: string
-  object?: string
-  created?: number
-  model?: string
-  system_fingerprint?: string
-  choices?: Choice[]
-  usage?: Usage
-}
+import {
+  OpenAISSEEvent,
+  OpenAIChoice,
+  OpenAIDelta,
+  OpenAIToolCallDelta,
+  OpenAIUsage,
+  OpenAISSEResponseData,
+  OpenAIAggregatedChoice,
+  OpenAIAggregatedToolCall
+} from '../types/api/openai';
 
-export interface Choice {
-  index: number
-  delta?: Delta
-  finish_reason?: string | null
-  logprobs?: any
-}
+// Using type aliases for backward compatibility
+type Choice = OpenAIChoice;
+type Delta = OpenAIDelta;
+type ToolCallDelta = OpenAIToolCallDelta;
+type Usage = OpenAIUsage;
+type AggregatedChoice = OpenAIAggregatedChoice;
+type AggregatedToolCall = OpenAIAggregatedToolCall;
 
-export interface Delta {
-  role?: string
-  content?: string
-  tool_calls?: ToolCallDelta[]
-}
-
-export interface ToolCallDelta {
-  index: number
-  id?: string
-  type?: string
-  function?: {
-    name?: string
-    arguments?: string
-  }
-}
-
-export interface Usage {
-  prompt_tokens?: number
-  completion_tokens?: number
-  total_tokens?: number
-  prompt_tokens_details?: {
-    cached_tokens?: number
-  }
-}
-
-// Aggregated Response Data Types
-export interface SSEResponseData {
-  id: string
-  object: string
-  created: number
-  model: string
-  system_fingerprint?: string
-  choices: AggregatedChoice[]
-  usage?: Usage
-  eventCount: number
-}
-
-export interface AggregatedChoice {
-  index: number
-  role: string
-  content: string
-  tool_calls: AggregatedToolCall[]
-  finish_reason: string
-}
-
-export interface AggregatedToolCall {
-  index: number
-  id: string
-  type: string
-  function: {
-    name: string
-    arguments: string
-  }
-}
-
-export function processSSEEvents(events: OpenAISSEEvent[]): SSEResponseData {
+export function processSSEEvents(events: OpenAISSEEvent[]): OpenAISSEResponseData {
   if (!events.length) {
     throw new Error("No events to process")
   }
@@ -100,8 +46,10 @@ function aggregateChoices(events: OpenAISSEEvent[]): AggregatedChoice[] {
     index: number
     role: string
     content: string
+    reasoning_content: string
     tool_calls: Map<number, AggregatedToolCall>
     finish_reason: string
+    logprobs?: any
   }>()
 
   for (const event of events) {
@@ -113,8 +61,10 @@ function aggregateChoices(events: OpenAISSEEvent[]): AggregatedChoice[] {
           index,
           role: "N/A",
           content: "",
+          reasoning_content: "",
           tool_calls: new Map<number, AggregatedToolCall>(),
           finish_reason: "N/A",
+          logprobs: undefined,
         })
       }
       const agg = choiceMap.get(index)!
@@ -122,6 +72,8 @@ function aggregateChoices(events: OpenAISSEEvent[]): AggregatedChoice[] {
       if (delta) {
         if (delta.role) agg.role = delta.role
         if (delta.content) agg.content += delta.content
+        if (delta.reasoning_content) agg.reasoning_content += delta.reasoning_content
+        if (delta.logprobs) agg.logprobs = delta.logprobs
         if (delta.tool_calls) {
           for (const toolCallDelta of delta.tool_calls) {
             const toolIndex = toolCallDelta.index
@@ -153,8 +105,9 @@ function aggregateChoices(events: OpenAISSEEvent[]): AggregatedChoice[] {
     index: agg.index,
     role: agg.role,
     content: agg.content,
+    reasoning_content: agg.reasoning_content,
     tool_calls: Array.from(agg.tool_calls.values()).sort((a, b) => a.index - b.index),
     finish_reason: agg.finish_reason,
+    logprobs: agg.logprobs,
   })).sort((a, b) => a.index - b.index)
 }
-
