@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.1",
+    "@langchain/anthropic": "^1.1.1",
     "openai": "^6.9.0",
     "react": "^19.2.0",
     "react-dom": "^19.1.1"

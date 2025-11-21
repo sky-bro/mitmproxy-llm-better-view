@@ -39,3 +39,19 @@ export function omit<T extends Record<string, any>, K extends keyof T>(
   });
   return result;
 }
+
+// @ts-ignore
+import { unsafeWindow } from '$';
+
+// Save the original fetch method for later use
+const originalFetch = unsafeWindow.fetch;
+
+/**
+ * Fetch Flow data from the specified URL
+ * @param dataUrl The URL to request
+ */
+export async function getFlowData(dataUrl: string) {
+  const newResp = await originalFetch(new Request(dataUrl));
+  const newJson = await newResp.json();
+  return newJson;
+}

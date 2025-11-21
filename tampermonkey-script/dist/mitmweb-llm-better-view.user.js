@@ -17,6 +17,1046 @@
 (function () {
   'use strict';
 
+  var _unsafeWindow = (() => typeof unsafeWindow != "undefined" ? unsafeWindow : void 0)();
+  class LRUCache {
+    maxSize;
+    cache;
+    constructor(maxSize) {
+      this.maxSize = maxSize;
+      this.cache = new Map();
+    }
+    get(key) {
+      const value = this.cache.get(key);
+      if (value !== void 0) {
+        this.cache.delete(key);
+        this.cache.set(key, value);
+      }
+      return value;
+    }
+    put(key, value) {
+      if (this.cache.size >= this.maxSize) {
+        const firstKey = this.cache.keys().next().value;
+        if (firstKey !== void 0) {
+          this.cache.delete(firstKey);
+        }
+      }
+      this.cache.set(key, value);
+    }
+  }
+  function omit(obj, keys) {
+    const result = { ...obj };
+    keys.forEach((key) => {
+      delete result[key];
+    });
+    return result;
+  }
+  const originalFetch$1 = _unsafeWindow.fetch;
+  async function getFlowData(dataUrl) {
+    const newResp = await originalFetch$1(new Request(dataUrl));
+    const newJson = await newResp.json();
+    return newJson;
+  }
+  const getStyles = () => {
+    return `details.llm-better-view {
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+details[open].llm-better-view summary {
+  border-bottom: 1px solid #aaa;
+  margin-bottom: 0.5em;
+}
+
+.llm-better-view {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 10px;
+  line-height: 1.6;
+  box-sizing: border-box;
+  max-width: 100%;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.llm-better-view * {
+  box-sizing: border-box;
+}
+
+.llm-better-view,
+.llm-better-view * {
+  /* Prevent overflow on all elements */
+  max-width: 100%;
+}
+
+details.llm-better-view {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  margin: 16px 0;
+  background: #ffffff;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  overflow: hidden; /* Prevent content overflow */
+}
+
+.llm-better-view summary {
+  font-weight: 600;
+  padding: 12px 16px;
+  cursor: pointer;
+  background: #f9fafb;
+  border-radius: 6px;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  color: #1f2937;
+  font-size: 1.6rem;
+  transition: background-color 0.2s;
+  word-break: break-word; /* Prevent long words from overflowing */
+}
+
+.llm-better-view summary:hover {
+  background: #f3f4f6;
+}
+
+details[open].llm-better-view summary {
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 0;
+}
+
+/* Container styles */
+.llm-better-view .container {
+  padding: 16px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden; /* Prevent container overflow */
+}
+
+.llm-better-view .header {
+  text-align: center;
+  margin-bottom: 20px;
+  position: relative;
+  padding: 0 16px;
+  width: 100%;
+  max-width: 100%;
+  overflow-wrap: break-word; /* Handle long words */
+}
+
+.llm-better-view .header h1 {
+  color: #111827;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  word-break: break-word; /* Prevent title overflow */
+}
+
+.llm-better-view .header p {
+  color: #6b7280;
+  font-size: 1.4rem;
+  word-break: break-word; /* Prevent description overflow */
+}
+
+.llm-better-view .global-collapse-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #e5e7eb;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.4rem;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background-color 0.2s;
+  font-weight: 500;
+  flex-shrink: 0; /* Prevent button from shrinking */
+}
+
+.llm-better-view .global-collapse-btn:hover {
+  background: #d1d5db;
+}
+
+.llm-better-view .section {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 16px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  width: 100%;
+  max-width: 100%;
+}
+
+.llm-better-view .section:last-child {
+  margin-bottom: 0;
+}
+
+.llm-better-view .section-header {
+  padding: 12px 16px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s;
+  width: 100%;
+  max-width: 100%;
+  word-break: break-word; /* Prevent header text overflow */
+  font-size: 1.4rem;
+}
+
+.llm-better-view .section-header:hover {
+  background: #f3f4f6;
+}
+
+.llm-better-view .section-title {
+  font-weight: 600;
+  font-size: 1.6rem;
+  color: #111827;
+  word-break: break-word; /* Prevent title overflow */
+  flex-grow: 1; /* Allow title to take available space */
+  margin-right: 8px;
+}
+
+.llm-better-view .section-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0; /* Prevent controls from shrinking */
+}
+
+.llm-better-view .expand-collapse-btn {
+  background: #dbeafe;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.4rem;
+  color: #1d4ed8;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  transition: background-color 0.2s;
+  font-weight: 500;
+  white-space: nowrap; /* Prevent button text wrapping */
+  flex-shrink: 0; /* Prevent button from shrinking */
+}
+
+.llm-better-view .expand-collapse-btn:hover {
+  background: #bfdbfe;
+}
+
+.llm-better-view .expand-collapse-btn.tools {
+  background: #f3e8ff;
+  color: #7c3aed;
+}
+
+.llm-better-view .expand-collapse-btn.tools:hover {
+  background: #e9d5ff;
+}
+
+.llm-better-view .toggle-icon {
+  transition: transform 0.2s;
+  color: #6b7280;
+  font-size: 1.2rem;
+  flex-shrink: 0; /* Prevent icon from shrinking */
+}
+
+.llm-better-view .toggle-icon.rotated {
+  transform: rotate(180deg);
+}
+
+.llm-better-view .section-content {
+  padding: 16px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden; /* Prevent content overflow */
+}
+
+.llm-better-view .info-item {
+  padding: 12px 0;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+}
+
+.llm-better-view .info-item:last-child {
+  border-bottom: none;
+}
+
+.llm-better-view .info-label {
+  font-size: 1.4rem;
+  color: #6b7280;
+  font-weight: 500;
+  min-width: 140px;
+  word-break: break-word; /* Prevent label overflow */
+}
+
+.llm-better-view .info-value {
+  font-weight: 600;
+  color: #111827;
+  font-size: 1.4rem;
+  text-align: right;
+  word-break: break-word; /* Handle long values */
+  max-width: 70%;
+  overflow-wrap: break-word; /* Additional word breaking */
+}
+
+.llm-better-view .message-item,
+.llm-better-view .tool-item {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 12px 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden; /* Prevent item overflow */
+}
+
+.llm-better-view .message-item:last-child,
+.llm-better-view .tool-item:last-child {
+  border-bottom: none;
+}
+
+.llm-better-view .message-header,
+.llm-better-view .tool-header {
+  padding: 8px 0;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  word-break: break-word; /* Handle long header text */
+  font-size: 1.4rem;
+}
+
+.llm-better-view .message-header:hover,
+.llm-better-view .tool-header:hover {
+  background: #f9fafb;
+  margin: 0 -16px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  width: calc(100% + 32px); /* Account for negative margins */
+  max-width: calc(100% + 32px);
+}
+
+.llm-better-view .role-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  flex-shrink: 0; /* Prevent badge from shrinking */
+  white-space: nowrap; /* Prevent badge text wrapping */
+}
+
+.llm-better-view .role-user {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.llm-better-view .role-assistant {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.llm-better-view .role-system {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.llm-better-view .role-tool {
+  background: #f3e8ff;
+  color: #7c3aed;
+}
+
+.llm-better-view .tool-name-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-transform: none;
+  background: #f3e8ff;
+  color: #7c3aed;
+  font-family: "Monaco", "Menlo", monospace;
+  word-break: break-word; /* Handle long tool names */
+  max-width: 100%;
+  overflow-wrap: break-word; /* Additional word breaking */
+}
+
+.llm-better-view .message-content,
+.llm-better-view .tool-content {
+  padding: 12px 0;
+  font-size: 1.4rem;
+  background-color: transparent;
+  overflow-y: auto;
+  width: 100%;
+  max-width: 100%;
+  word-break: break-word; /* Handle long content */
+  overflow-wrap: break-word; /* Additional word breaking */
+}
+
+.llm-better-view .json-content {
+  font-family: "Monaco", "Menlo", monospace;
+  background: #1f2937;
+  color: #f9fafb;
+  padding: 16px;
+  border-radius: 6px;
+  font-size: 1.2rem;
+  white-space: pre-wrap;
+  overflow-x: auto; /* Allow horizontal scrolling for long lines */
+  margin: 8px 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.llm-better-view .usage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.llm-better-view .usage-item {
+  background: #f9fafb;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  width: 100%;
+  max-width: 100%;
+  word-break: break-word; /* Handle long usage values */
+}
+
+.llm-better-view .usage-label {
+  font-size: 1.4rem;
+  color: #6b7280;
+  margin-bottom: 4px;
+  word-break: break-word; /* Prevent label overflow */
+}
+
+.llm-better-view .usage-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  word-break: break-word; /* Handle long values */
+}
+
+.llm-better-view .choice-item {
+  border-radius: 8px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  width: 100%;
+  max-width: 100%;
+}
+
+.llm-better-view .choice-header {
+  background: #f9fafb;
+  padding: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: none;
+  width: 100%;
+  text-align: left;
+  word-break: break-word; /* Handle long header text */
+  font-size: 1.4rem;
+}
+
+.llm-better-view .choice-header:hover {
+  background: #f3f4f6;
+}
+
+.llm-better-view .choice-badge {
+  background: #10b981;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  flex-shrink: 0; /* Prevent badge from shrinking */
+  white-space: nowrap; /* Prevent badge text wrapping */
+}
+
+.llm-better-view .choice-content {
+  padding: 16px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden; /* Prevent content overflow */
+}
+
+.llm-better-view .choice-meta {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 16px;
+  font-size: 1.4rem;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
+}
+
+.llm-better-view .choice-meta-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  min-width: 0; /* Allow flex items to shrink below content size */
+}
+
+.llm-better-view .choice-meta-item span:first-child {
+  font-weight: 600;
+  color: #374151;
+  word-break: break-word; /* Handle long labels */
+}
+
+/* GitHub-style Markdown prose */
+.llm-better-view .prose {
+  line-height: 1.7;
+  color: #374151;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden; /* Prevent prose overflow */
+  word-break: break-word; /* Handle long words */
+  overflow-wrap: break-word; /* Additional word breaking */
+  font-size: 1.4rem;
+}
+
+.llm-better-view .prose h1,
+.llm-better-view .prose h2,
+.llm-better-view .prose h3,
+.llm-better-view .prose h4,
+.llm-better-view .prose h5,
+.llm-better-view .prose h6 {
+  margin-top: 1.5em;
+  margin-bottom: 0.75em;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #111827;
+  word-break: break-word; /* Handle long headers */
+  max-width: 100%;
+}
+
+.llm-better-view .prose h1 {
+  font-size: 2em;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+}
+
+.llm-better-view .prose h2 {
+  font-size: 1.8em;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+}
+
+.llm-better-view .prose h3 {
+  font-size: 1.6em;
+}
+
+.llm-better-view .prose h4 {
+  font-size: 1.4rem;
+}
+
+.llm-better-view .prose h5 {
+  font-size: 1.2rem;
+}
+
+.llm-better-view .prose h6 {
+  font-size: 1.1em;
+  color: #6b7280;
+}
+
+.llm-better-view .prose p {
+  margin-top: 0;
+  margin-bottom: 1em;
+  word-break: break-word; /* Handle long paragraphs */
+  max-width: 100%;
+  font-size: 1.4rem;
+}
+
+.llm-better-view .prose ul,
+.llm-better-view .prose ol {
+  margin-top: 0;
+  margin-bottom: 1em;
+  padding-left: 1.75em;
+  width: 100%;
+  max-width: 100%;
+  word-break: break-word; /* Handle long list items */
+}
+
+.llm-better-view .prose li {
+  margin-bottom: 0.25em;
+  word-break: break-word; /* Handle long list items */
+}
+
+.llm-better-view .prose blockquote {
+  margin: 16px 0;
+  padding: 0 16px;
+  color: #6b7280;
+  border-left: 4px solid #d1d5db;
+  font-style: italic;
+  width: 100%;
+  max-width: 100%;
+  word-break: break-word; /* Handle long quotes */
+}
+
+.llm-better-view .prose code {
+  background: #f3f4f6;
+  padding: 0.2em 0.4em;
+  border-radius: 0.375em;
+  font-size: 1.1em;
+  font-family: "Monaco", "Menlo", "Consolas", monospace;
+  word-break: break-word; /* Handle long inline code */
+  overflow-wrap: break-word; /* Additional word breaking */
+}
+
+.llm-better-view .prose pre {
+  background: #1f2937;
+  color: #f9fafb;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto; /* Allow horizontal scrolling */
+  margin: 1rem 0;
+  border: 1px solid #d1d5db;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.llm-better-view .prose pre code {
+  background: none;
+  padding: 0;
+  word-break: normal; /* Allow normal breaking in code blocks */
+  white-space: pre; /* Preserve whitespace in code blocks */
+}
+
+/* Style for plain text content preserving whitespace */
+.llm-better-view .prose pre.text-content {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  margin: 0;
+  overflow-x: visible;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.llm-better-view .prose a {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 500;
+  word-break: break-word; /* Handle long URLs */
+}
+
+.llm-better-view .prose a:hover {
+  text-decoration: underline;
+}
+
+.llm-better-view .prose strong {
+  font-weight: 700;
+}
+
+.llm-better-view .prose em {
+  font-style: italic;
+}
+
+.llm-better-view .prose table {
+  border-collapse: collapse;
+  margin: 16px 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto; /* Allow horizontal scrolling */
+  display: block; /* Enable scrolling */
+  box-sizing: border-box;
+}
+
+.llm-better-view .prose th,
+.llm-better-view .prose td {
+  border: 1px solid #d1d5db;
+  padding: 8px 12px;
+  text-align: left;
+  word-break: break-word; /* Handle long cell content */
+}
+
+.llm-better-view .prose th {
+  background: #f9fafb;
+  font-weight: 600;
+}
+
+.llm-better-view .tool-description {
+  margin: 8px 0;
+  font-size: 1.5rem;
+  color: #374151;
+  word-break: break-word; /* Handle long descriptions */
+}
+
+.llm-better-view .tool-call-name {
+  font-weight: 700;
+  color: #111827;
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+  word-break: break-word; /* Handle long tool names */
+}
+
+.llm-better-view .tool-parameters {
+  margin-top: 12px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.llm-better-view .tool-parameters-title {
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 8px;
+  font-size: 1.3rem;
+  word-break: break-word; /* Handle long titles */
+}
+
+.llm-better-view .parameter-item {
+  margin-bottom: 12px;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 6px;
+  border-left: 4px solid #3b82f6;
+  width: 100%;
+  max-width: 100%;
+  word-break: break-word; /* Handle long parameter content */
+}
+
+.llm-better-view .parameter-name {
+  font-weight: 700;
+  font-size: 1.4rem;
+  color: #111827;
+  font-family: "Monaco", "Menlo", monospace;
+  margin-bottom: 4px;
+  word-break: break-word; /* Handle long parameter names */
+}
+
+.llm-better-view .parameter-type {
+  font-size: 1.1rem;
+  color: #7c3aed;
+  background: #f3e8ff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 8px;
+  flex-shrink: 0; /* Prevent type badge from shrinking */
+  white-space: nowrap; /* Prevent type text wrapping */
+}
+
+.llm-better-view .parameter-required {
+  font-size: 1rem;
+  color: #dc2626;
+  background: #fef2f2;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  flex-shrink: 0; /* Prevent required badge from shrinking */
+  white-space: nowrap; /* Prevent required text wrapping */
+}
+
+.llm-better-view .parameter-description {
+  font-size: 1.3rem;
+  color: #6b7280;
+  margin-top: 4px;
+  word-break: break-word; /* Handle long descriptions */
+}
+
+.llm-better-view .empty-state {
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+  padding: 48px 24px;
+  width: 100%;
+  max-width: 100%;
+  word-break: break-word; /* Handle long empty state messages */
+}
+
+/* SVG Icons */
+.llm-better-view .icon {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  flex-shrink: 0; /* Prevent icons from shrinking */
+}
+
+.llm-better-view .event-badge {
+  position: absolute;
+  top: 16px;
+  right: 24px;
+  background: #4f46e5;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  flex-shrink: 0; /* Prevent badge from shrinking */
+}
+
+.llm-better-view .content {
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.llm-better-view .finish-reason-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  flex-shrink: 0; /* Prevent badge from shrinking */
+  white-space: nowrap; /* Prevent badge text wrapping */
+}
+
+.llm-better-view .finish-stop {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.llm-better-view .finish-length {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.llm-better-view .finish-tool-calls {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.llm-better-view .finish-content-filter {
+  background: #fecaca;
+  color: #991b1b;
+}
+
+.llm-better-view .content-section {
+  margin-bottom: 20px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.llm-better-view .content-section h4 {
+  margin-bottom: 12px;
+  font-size: 1.4rem;
+  color: #111827;
+  font-weight: 600;
+  word-break: break-word; /* Handle long section titles */
+}
+
+.llm-better-view .tool-calls-container {
+  margin-top: 12px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.llm-better-view .tool-calls-container h4 {
+  margin-bottom: 12px;
+  font-size: 1rem;
+  color: #111827;
+  font-weight: 600;
+  word-break: break-word; /* Handle long container titles */
+}
+
+.llm-better-view .tool-call-item {
+  border-radius: 6px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  width: 100%;
+  max-width: 100%;
+}
+
+.llm-better-view .tool-call-header {
+  background: #fafafa;
+  padding: 12px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: none;
+  width: 100%;
+  text-align: left;
+  word-break: break-word; /* Handle long header text */
+  font-size: 1.4rem;
+}
+
+.llm-better-view .tool-call-header:hover {
+  background: #f5f5f5;
+}
+
+.llm-better-view .tool-call-id {
+  font-size: 1.2rem;
+  color: #6b7280;
+  word-break: break-word; /* Handle long IDs */
+}
+
+.llm-better-view .tool-call-content {
+  padding: 12px 16px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden; /* Prevent content overflow */
+}
+
+.llm-better-view .events-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.llm-better-view .event-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+}
+
+.llm-better-view .event-header {
+  background: #f9fafb;
+  padding: 12px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: none;
+  width: 100%;
+  text-align: left;
+  word-break: break-word; /* Handle long header text */
+  font-size: 1.4rem;
+}
+
+.llm-better-view .event-header:hover {
+  background: #f3f4f6;
+}
+
+.llm-better-view .event-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap; /* Allow meta items to wrap */
+}
+
+.llm-better-view .event-type-badge {
+  background: #e5e7eb;
+  color: #374151;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  flex-shrink: 0; /* Prevent badge from shrinking */
+  white-space: nowrap; /* Prevent badge text wrapping */
+}
+
+.llm-better-view .event-timestamp {
+  font-size: 1.2rem;
+  color: #6b7280;
+  font-family: 'Monaco', 'Menlo', monospace;
+  word-break: break-word; /* Handle long timestamps */
+}
+
+.llm-better-view .event-content {
+  padding: 16px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden; /* Prevent content overflow */
+}
+
+/* Utility classes for inline styles */
+.llm-better-view .flex-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.llm-better-view .text-small {
+  font-size: 1.3rem; /* Adjusted for 10px base font */
+  color: #1e293b;
+}
+
+.llm-better-view .margin-bottom-sm {
+  margin-bottom: 8px;
+}
+
+.llm-better-view .margin-top-md {
+  margin-top: 12px;
+}
+
+.llm-better-view [data-content-type="anthropic"] {
+  margin: 16px 0;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #fed7aa;
+  background: #fffbeb;
+  width: 100%;
+  max-width: 100%;
+  word-break: break-word; /* Handle long anthropic content */
+}
+`;
+  };
+  class APIProviderRegistry {
+    providers = new Map();
+    register(provider) {
+      this.providers.set(provider.name, provider);
+    }
+    get(name) {
+      return this.providers.get(name);
+    }
+    getAll() {
+      return Array.from(this.providers.values());
+    }
+    detectProvider(flow) {
+      for (const provider of this.providers.values()) {
+        if (provider.detector.detect(flow)) {
+          return provider;
+        }
+      }
+      return void 0;
+    }
+  }
+  const apiRegistry = new APIProviderRegistry();
+  class BaseDetector {
+matchesPath(flow, patterns) {
+      const path = flow.request.path.toLowerCase();
+      return patterns.some((pattern) => path.includes(pattern));
+    }
+matchesHost(flow, patterns) {
+      const headers = flow.request.headers || [];
+      for (const header of headers) {
+        if (Array.isArray(header) && header[0]?.toLowerCase() === "host") {
+          const host = header[1]?.toLowerCase();
+          return patterns.some((pattern) => host?.includes(pattern));
+        }
+        if (typeof header === "object" && header !== null) {
+          for (const [key, value] of Object.entries(header)) {
+            if (key.toLowerCase() === "host") {
+              const host = String(value).toLowerCase();
+              return patterns.some((pattern) => host.includes(pattern));
+            }
+          }
+        }
+      }
+      return false;
+    }
+  }
+  class OpenAIDetector extends BaseDetector {
+    name = "openai";
+    detect(flow) {
+      const openAIPatterns = [
+        "/completions",
+        "/chat/completions",
+        "/embeddings",
+        "/audio/transcriptions"
+      ];
+      return this.matchesPath(flow, openAIPatterns);
+    }
+  }
   function getDefaultExportFromCjs(x) {
     return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, "default") ? x["default"] : x;
   }
@@ -60,6 +1100,314 @@
     return jsxRuntime.exports;
   }
   var jsxRuntimeExports = requireJsxRuntime();
+  function createReactContainer() {
+    const container = document.createElement("div");
+    container.style.width = "100%";
+    container.style.height = "100%";
+    return container;
+  }
+  async function createDirectElement(html) {
+    let container = document.getElementById("mitmproxy-llm-better-view-container");
+    if (!container) {
+      const contentview = document.querySelector(".contentview");
+      if (!contentview) {
+        console.warn("no `.contentview` element found");
+        return;
+      }
+      const secondChild = contentview.childNodes[1];
+      container = document.createElement("details");
+      container.toggleAttribute("open");
+      container.id = "mitmproxy-llm-better-view-container";
+      container.classList.add("llm-better-view");
+      contentview.insertBefore(container, secondChild);
+    }
+    let summaryElement = Array.from(container.children).find(
+      (el) => el.tagName.toLowerCase() === "summary"
+    );
+    if (!summaryElement) {
+      summaryElement = document.createElement("summary");
+      summaryElement.textContent = "LLM Better View";
+      container.prepend(summaryElement);
+    }
+    const childrenToKeep = Array.from(container.children).filter(
+      (el) => el.tagName.toLowerCase() === "summary"
+    );
+    container.innerHTML = "";
+    childrenToKeep.forEach((child) => container.appendChild(child));
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = html.trim();
+    while (tempDiv.firstChild) {
+      container.appendChild(tempDiv.firstChild);
+    }
+  }
+  var client = { exports: {} };
+  var reactDomClient_production = {};
+  var scheduler = { exports: {} };
+  var scheduler_production = {};
+  var hasRequiredScheduler_production;
+  function requireScheduler_production() {
+    if (hasRequiredScheduler_production) return scheduler_production;
+    hasRequiredScheduler_production = 1;
+    (function(exports$1) {
+      function push(heap, node) {
+        var index = heap.length;
+        heap.push(node);
+        a: for (; 0 < index; ) {
+          var parentIndex = index - 1 >>> 1, parent = heap[parentIndex];
+          if (0 < compare(parent, node))
+            heap[parentIndex] = node, heap[index] = parent, index = parentIndex;
+          else break a;
+        }
+      }
+      function peek(heap) {
+        return 0 === heap.length ? null : heap[0];
+      }
+      function pop(heap) {
+        if (0 === heap.length) return null;
+        var first = heap[0], last = heap.pop();
+        if (last !== first) {
+          heap[0] = last;
+          a: for (var index = 0, length = heap.length, halfLength = length >>> 1; index < halfLength; ) {
+            var leftIndex = 2 * (index + 1) - 1, left = heap[leftIndex], rightIndex = leftIndex + 1, right = heap[rightIndex];
+            if (0 > compare(left, last))
+              rightIndex < length && 0 > compare(right, left) ? (heap[index] = right, heap[rightIndex] = last, index = rightIndex) : (heap[index] = left, heap[leftIndex] = last, index = leftIndex);
+            else if (rightIndex < length && 0 > compare(right, last))
+              heap[index] = right, heap[rightIndex] = last, index = rightIndex;
+            else break a;
+          }
+        }
+        return first;
+      }
+      function compare(a, b) {
+        var diff = a.sortIndex - b.sortIndex;
+        return 0 !== diff ? diff : a.id - b.id;
+      }
+      exports$1.unstable_now = void 0;
+      if ("object" === typeof performance && "function" === typeof performance.now) {
+        var localPerformance = performance;
+        exports$1.unstable_now = function() {
+          return localPerformance.now();
+        };
+      } else {
+        var localDate = Date, initialTime = localDate.now();
+        exports$1.unstable_now = function() {
+          return localDate.now() - initialTime;
+        };
+      }
+      var taskQueue = [], timerQueue = [], taskIdCounter = 1, currentTask = null, currentPriorityLevel = 3, isPerformingWork = false, isHostCallbackScheduled = false, isHostTimeoutScheduled = false, needsPaint = false, localSetTimeout = "function" === typeof setTimeout ? setTimeout : null, localClearTimeout = "function" === typeof clearTimeout ? clearTimeout : null, localSetImmediate = "undefined" !== typeof setImmediate ? setImmediate : null;
+      function advanceTimers(currentTime) {
+        for (var timer = peek(timerQueue); null !== timer; ) {
+          if (null === timer.callback) pop(timerQueue);
+          else if (timer.startTime <= currentTime)
+            pop(timerQueue), timer.sortIndex = timer.expirationTime, push(taskQueue, timer);
+          else break;
+          timer = peek(timerQueue);
+        }
+      }
+      function handleTimeout(currentTime) {
+        isHostTimeoutScheduled = false;
+        advanceTimers(currentTime);
+        if (!isHostCallbackScheduled)
+          if (null !== peek(taskQueue))
+            isHostCallbackScheduled = true, isMessageLoopRunning || (isMessageLoopRunning = true, schedulePerformWorkUntilDeadline());
+          else {
+            var firstTimer = peek(timerQueue);
+            null !== firstTimer && requestHostTimeout(handleTimeout, firstTimer.startTime - currentTime);
+          }
+      }
+      var isMessageLoopRunning = false, taskTimeoutID = -1, frameInterval = 5, startTime = -1;
+      function shouldYieldToHost() {
+        return needsPaint ? true : exports$1.unstable_now() - startTime < frameInterval ? false : true;
+      }
+      function performWorkUntilDeadline() {
+        needsPaint = false;
+        if (isMessageLoopRunning) {
+          var currentTime = exports$1.unstable_now();
+          startTime = currentTime;
+          var hasMoreWork = true;
+          try {
+            a: {
+              isHostCallbackScheduled = false;
+              isHostTimeoutScheduled && (isHostTimeoutScheduled = false, localClearTimeout(taskTimeoutID), taskTimeoutID = -1);
+              isPerformingWork = true;
+              var previousPriorityLevel = currentPriorityLevel;
+              try {
+                b: {
+                  advanceTimers(currentTime);
+                  for (currentTask = peek(taskQueue); null !== currentTask && !(currentTask.expirationTime > currentTime && shouldYieldToHost()); ) {
+                    var callback = currentTask.callback;
+                    if ("function" === typeof callback) {
+                      currentTask.callback = null;
+                      currentPriorityLevel = currentTask.priorityLevel;
+                      var continuationCallback = callback(
+                        currentTask.expirationTime <= currentTime
+                      );
+                      currentTime = exports$1.unstable_now();
+                      if ("function" === typeof continuationCallback) {
+                        currentTask.callback = continuationCallback;
+                        advanceTimers(currentTime);
+                        hasMoreWork = true;
+                        break b;
+                      }
+                      currentTask === peek(taskQueue) && pop(taskQueue);
+                      advanceTimers(currentTime);
+                    } else pop(taskQueue);
+                    currentTask = peek(taskQueue);
+                  }
+                  if (null !== currentTask) hasMoreWork = true;
+                  else {
+                    var firstTimer = peek(timerQueue);
+                    null !== firstTimer && requestHostTimeout(
+                      handleTimeout,
+                      firstTimer.startTime - currentTime
+                    );
+                    hasMoreWork = false;
+                  }
+                }
+                break a;
+              } finally {
+                currentTask = null, currentPriorityLevel = previousPriorityLevel, isPerformingWork = false;
+              }
+              hasMoreWork = void 0;
+            }
+          } finally {
+            hasMoreWork ? schedulePerformWorkUntilDeadline() : isMessageLoopRunning = false;
+          }
+        }
+      }
+      var schedulePerformWorkUntilDeadline;
+      if ("function" === typeof localSetImmediate)
+        schedulePerformWorkUntilDeadline = function() {
+          localSetImmediate(performWorkUntilDeadline);
+        };
+      else if ("undefined" !== typeof MessageChannel) {
+        var channel = new MessageChannel(), port = channel.port2;
+        channel.port1.onmessage = performWorkUntilDeadline;
+        schedulePerformWorkUntilDeadline = function() {
+          port.postMessage(null);
+        };
+      } else
+        schedulePerformWorkUntilDeadline = function() {
+          localSetTimeout(performWorkUntilDeadline, 0);
+        };
+      function requestHostTimeout(callback, ms) {
+        taskTimeoutID = localSetTimeout(function() {
+          callback(exports$1.unstable_now());
+        }, ms);
+      }
+      exports$1.unstable_IdlePriority = 5;
+      exports$1.unstable_ImmediatePriority = 1;
+      exports$1.unstable_LowPriority = 4;
+      exports$1.unstable_NormalPriority = 3;
+      exports$1.unstable_Profiling = null;
+      exports$1.unstable_UserBlockingPriority = 2;
+      exports$1.unstable_cancelCallback = function(task) {
+        task.callback = null;
+      };
+      exports$1.unstable_forceFrameRate = function(fps) {
+        0 > fps || 125 < fps ? console.error(
+          "forceFrameRate takes a positive int between 0 and 125, forcing frame rates higher than 125 fps is not supported"
+        ) : frameInterval = 0 < fps ? Math.floor(1e3 / fps) : 5;
+      };
+      exports$1.unstable_getCurrentPriorityLevel = function() {
+        return currentPriorityLevel;
+      };
+      exports$1.unstable_next = function(eventHandler) {
+        switch (currentPriorityLevel) {
+          case 1:
+          case 2:
+          case 3:
+            var priorityLevel = 3;
+            break;
+          default:
+            priorityLevel = currentPriorityLevel;
+        }
+        var previousPriorityLevel = currentPriorityLevel;
+        currentPriorityLevel = priorityLevel;
+        try {
+          return eventHandler();
+        } finally {
+          currentPriorityLevel = previousPriorityLevel;
+        }
+      };
+      exports$1.unstable_requestPaint = function() {
+        needsPaint = true;
+      };
+      exports$1.unstable_runWithPriority = function(priorityLevel, eventHandler) {
+        switch (priorityLevel) {
+          case 1:
+          case 2:
+          case 3:
+          case 4:
+          case 5:
+            break;
+          default:
+            priorityLevel = 3;
+        }
+        var previousPriorityLevel = currentPriorityLevel;
+        currentPriorityLevel = priorityLevel;
+        try {
+          return eventHandler();
+        } finally {
+          currentPriorityLevel = previousPriorityLevel;
+        }
+      };
+      exports$1.unstable_scheduleCallback = function(priorityLevel, callback, options) {
+        var currentTime = exports$1.unstable_now();
+        "object" === typeof options && null !== options ? (options = options.delay, options = "number" === typeof options && 0 < options ? currentTime + options : currentTime) : options = currentTime;
+        switch (priorityLevel) {
+          case 1:
+            var timeout = -1;
+            break;
+          case 2:
+            timeout = 250;
+            break;
+          case 5:
+            timeout = 1073741823;
+            break;
+          case 4:
+            timeout = 1e4;
+            break;
+          default:
+            timeout = 5e3;
+        }
+        timeout = options + timeout;
+        priorityLevel = {
+          id: taskIdCounter++,
+          callback,
+          priorityLevel,
+          startTime: options,
+          expirationTime: timeout,
+          sortIndex: -1
+        };
+        options > currentTime ? (priorityLevel.sortIndex = options, push(timerQueue, priorityLevel), null === peek(taskQueue) && priorityLevel === peek(timerQueue) && (isHostTimeoutScheduled ? (localClearTimeout(taskTimeoutID), taskTimeoutID = -1) : isHostTimeoutScheduled = true, requestHostTimeout(handleTimeout, options - currentTime))) : (priorityLevel.sortIndex = timeout, push(taskQueue, priorityLevel), isHostCallbackScheduled || isPerformingWork || (isHostCallbackScheduled = true, isMessageLoopRunning || (isMessageLoopRunning = true, schedulePerformWorkUntilDeadline())));
+        return priorityLevel;
+      };
+      exports$1.unstable_shouldYield = shouldYieldToHost;
+      exports$1.unstable_wrapCallback = function(callback) {
+        var parentPriorityLevel = currentPriorityLevel;
+        return function() {
+          var previousPriorityLevel = currentPriorityLevel;
+          currentPriorityLevel = parentPriorityLevel;
+          try {
+            return callback.apply(this, arguments);
+          } finally {
+            currentPriorityLevel = previousPriorityLevel;
+          }
+        };
+      };
+    })(scheduler_production);
+    return scheduler_production;
+  }
+  var hasRequiredScheduler;
+  function requireScheduler() {
+    if (hasRequiredScheduler) return scheduler.exports;
+    hasRequiredScheduler = 1;
+    {
+      scheduler.exports = requireScheduler_production();
+    }
+    return scheduler.exports;
+  }
   var react = { exports: {} };
   var react_production = {};
   var hasRequiredReact_production;
@@ -494,276 +1842,6 @@
       react.exports = requireReact_production();
     }
     return react.exports;
-  }
-  var reactExports = requireReact();
-  const React = getDefaultExportFromCjs(reactExports);
-  var client = { exports: {} };
-  var reactDomClient_production = {};
-  var scheduler = { exports: {} };
-  var scheduler_production = {};
-  var hasRequiredScheduler_production;
-  function requireScheduler_production() {
-    if (hasRequiredScheduler_production) return scheduler_production;
-    hasRequiredScheduler_production = 1;
-    (function(exports$1) {
-      function push(heap, node) {
-        var index = heap.length;
-        heap.push(node);
-        a: for (; 0 < index; ) {
-          var parentIndex = index - 1 >>> 1, parent = heap[parentIndex];
-          if (0 < compare(parent, node))
-            heap[parentIndex] = node, heap[index] = parent, index = parentIndex;
-          else break a;
-        }
-      }
-      function peek(heap) {
-        return 0 === heap.length ? null : heap[0];
-      }
-      function pop(heap) {
-        if (0 === heap.length) return null;
-        var first = heap[0], last = heap.pop();
-        if (last !== first) {
-          heap[0] = last;
-          a: for (var index = 0, length = heap.length, halfLength = length >>> 1; index < halfLength; ) {
-            var leftIndex = 2 * (index + 1) - 1, left = heap[leftIndex], rightIndex = leftIndex + 1, right = heap[rightIndex];
-            if (0 > compare(left, last))
-              rightIndex < length && 0 > compare(right, left) ? (heap[index] = right, heap[rightIndex] = last, index = rightIndex) : (heap[index] = left, heap[leftIndex] = last, index = leftIndex);
-            else if (rightIndex < length && 0 > compare(right, last))
-              heap[index] = right, heap[rightIndex] = last, index = rightIndex;
-            else break a;
-          }
-        }
-        return first;
-      }
-      function compare(a, b) {
-        var diff = a.sortIndex - b.sortIndex;
-        return 0 !== diff ? diff : a.id - b.id;
-      }
-      exports$1.unstable_now = void 0;
-      if ("object" === typeof performance && "function" === typeof performance.now) {
-        var localPerformance = performance;
-        exports$1.unstable_now = function() {
-          return localPerformance.now();
-        };
-      } else {
-        var localDate = Date, initialTime = localDate.now();
-        exports$1.unstable_now = function() {
-          return localDate.now() - initialTime;
-        };
-      }
-      var taskQueue = [], timerQueue = [], taskIdCounter = 1, currentTask = null, currentPriorityLevel = 3, isPerformingWork = false, isHostCallbackScheduled = false, isHostTimeoutScheduled = false, needsPaint = false, localSetTimeout = "function" === typeof setTimeout ? setTimeout : null, localClearTimeout = "function" === typeof clearTimeout ? clearTimeout : null, localSetImmediate = "undefined" !== typeof setImmediate ? setImmediate : null;
-      function advanceTimers(currentTime) {
-        for (var timer = peek(timerQueue); null !== timer; ) {
-          if (null === timer.callback) pop(timerQueue);
-          else if (timer.startTime <= currentTime)
-            pop(timerQueue), timer.sortIndex = timer.expirationTime, push(taskQueue, timer);
-          else break;
-          timer = peek(timerQueue);
-        }
-      }
-      function handleTimeout(currentTime) {
-        isHostTimeoutScheduled = false;
-        advanceTimers(currentTime);
-        if (!isHostCallbackScheduled)
-          if (null !== peek(taskQueue))
-            isHostCallbackScheduled = true, isMessageLoopRunning || (isMessageLoopRunning = true, schedulePerformWorkUntilDeadline());
-          else {
-            var firstTimer = peek(timerQueue);
-            null !== firstTimer && requestHostTimeout(handleTimeout, firstTimer.startTime - currentTime);
-          }
-      }
-      var isMessageLoopRunning = false, taskTimeoutID = -1, frameInterval = 5, startTime = -1;
-      function shouldYieldToHost() {
-        return needsPaint ? true : exports$1.unstable_now() - startTime < frameInterval ? false : true;
-      }
-      function performWorkUntilDeadline() {
-        needsPaint = false;
-        if (isMessageLoopRunning) {
-          var currentTime = exports$1.unstable_now();
-          startTime = currentTime;
-          var hasMoreWork = true;
-          try {
-            a: {
-              isHostCallbackScheduled = false;
-              isHostTimeoutScheduled && (isHostTimeoutScheduled = false, localClearTimeout(taskTimeoutID), taskTimeoutID = -1);
-              isPerformingWork = true;
-              var previousPriorityLevel = currentPriorityLevel;
-              try {
-                b: {
-                  advanceTimers(currentTime);
-                  for (currentTask = peek(taskQueue); null !== currentTask && !(currentTask.expirationTime > currentTime && shouldYieldToHost()); ) {
-                    var callback = currentTask.callback;
-                    if ("function" === typeof callback) {
-                      currentTask.callback = null;
-                      currentPriorityLevel = currentTask.priorityLevel;
-                      var continuationCallback = callback(
-                        currentTask.expirationTime <= currentTime
-                      );
-                      currentTime = exports$1.unstable_now();
-                      if ("function" === typeof continuationCallback) {
-                        currentTask.callback = continuationCallback;
-                        advanceTimers(currentTime);
-                        hasMoreWork = true;
-                        break b;
-                      }
-                      currentTask === peek(taskQueue) && pop(taskQueue);
-                      advanceTimers(currentTime);
-                    } else pop(taskQueue);
-                    currentTask = peek(taskQueue);
-                  }
-                  if (null !== currentTask) hasMoreWork = true;
-                  else {
-                    var firstTimer = peek(timerQueue);
-                    null !== firstTimer && requestHostTimeout(
-                      handleTimeout,
-                      firstTimer.startTime - currentTime
-                    );
-                    hasMoreWork = false;
-                  }
-                }
-                break a;
-              } finally {
-                currentTask = null, currentPriorityLevel = previousPriorityLevel, isPerformingWork = false;
-              }
-              hasMoreWork = void 0;
-            }
-          } finally {
-            hasMoreWork ? schedulePerformWorkUntilDeadline() : isMessageLoopRunning = false;
-          }
-        }
-      }
-      var schedulePerformWorkUntilDeadline;
-      if ("function" === typeof localSetImmediate)
-        schedulePerformWorkUntilDeadline = function() {
-          localSetImmediate(performWorkUntilDeadline);
-        };
-      else if ("undefined" !== typeof MessageChannel) {
-        var channel = new MessageChannel(), port = channel.port2;
-        channel.port1.onmessage = performWorkUntilDeadline;
-        schedulePerformWorkUntilDeadline = function() {
-          port.postMessage(null);
-        };
-      } else
-        schedulePerformWorkUntilDeadline = function() {
-          localSetTimeout(performWorkUntilDeadline, 0);
-        };
-      function requestHostTimeout(callback, ms) {
-        taskTimeoutID = localSetTimeout(function() {
-          callback(exports$1.unstable_now());
-        }, ms);
-      }
-      exports$1.unstable_IdlePriority = 5;
-      exports$1.unstable_ImmediatePriority = 1;
-      exports$1.unstable_LowPriority = 4;
-      exports$1.unstable_NormalPriority = 3;
-      exports$1.unstable_Profiling = null;
-      exports$1.unstable_UserBlockingPriority = 2;
-      exports$1.unstable_cancelCallback = function(task) {
-        task.callback = null;
-      };
-      exports$1.unstable_forceFrameRate = function(fps) {
-        0 > fps || 125 < fps ? console.error(
-          "forceFrameRate takes a positive int between 0 and 125, forcing frame rates higher than 125 fps is not supported"
-        ) : frameInterval = 0 < fps ? Math.floor(1e3 / fps) : 5;
-      };
-      exports$1.unstable_getCurrentPriorityLevel = function() {
-        return currentPriorityLevel;
-      };
-      exports$1.unstable_next = function(eventHandler) {
-        switch (currentPriorityLevel) {
-          case 1:
-          case 2:
-          case 3:
-            var priorityLevel = 3;
-            break;
-          default:
-            priorityLevel = currentPriorityLevel;
-        }
-        var previousPriorityLevel = currentPriorityLevel;
-        currentPriorityLevel = priorityLevel;
-        try {
-          return eventHandler();
-        } finally {
-          currentPriorityLevel = previousPriorityLevel;
-        }
-      };
-      exports$1.unstable_requestPaint = function() {
-        needsPaint = true;
-      };
-      exports$1.unstable_runWithPriority = function(priorityLevel, eventHandler) {
-        switch (priorityLevel) {
-          case 1:
-          case 2:
-          case 3:
-          case 4:
-          case 5:
-            break;
-          default:
-            priorityLevel = 3;
-        }
-        var previousPriorityLevel = currentPriorityLevel;
-        currentPriorityLevel = priorityLevel;
-        try {
-          return eventHandler();
-        } finally {
-          currentPriorityLevel = previousPriorityLevel;
-        }
-      };
-      exports$1.unstable_scheduleCallback = function(priorityLevel, callback, options) {
-        var currentTime = exports$1.unstable_now();
-        "object" === typeof options && null !== options ? (options = options.delay, options = "number" === typeof options && 0 < options ? currentTime + options : currentTime) : options = currentTime;
-        switch (priorityLevel) {
-          case 1:
-            var timeout = -1;
-            break;
-          case 2:
-            timeout = 250;
-            break;
-          case 5:
-            timeout = 1073741823;
-            break;
-          case 4:
-            timeout = 1e4;
-            break;
-          default:
-            timeout = 5e3;
-        }
-        timeout = options + timeout;
-        priorityLevel = {
-          id: taskIdCounter++,
-          callback,
-          priorityLevel,
-          startTime: options,
-          expirationTime: timeout,
-          sortIndex: -1
-        };
-        options > currentTime ? (priorityLevel.sortIndex = options, push(timerQueue, priorityLevel), null === peek(taskQueue) && priorityLevel === peek(timerQueue) && (isHostTimeoutScheduled ? (localClearTimeout(taskTimeoutID), taskTimeoutID = -1) : isHostTimeoutScheduled = true, requestHostTimeout(handleTimeout, options - currentTime))) : (priorityLevel.sortIndex = timeout, push(taskQueue, priorityLevel), isHostCallbackScheduled || isPerformingWork || (isHostCallbackScheduled = true, isMessageLoopRunning || (isMessageLoopRunning = true, schedulePerformWorkUntilDeadline())));
-        return priorityLevel;
-      };
-      exports$1.unstable_shouldYield = shouldYieldToHost;
-      exports$1.unstable_wrapCallback = function(callback) {
-        var parentPriorityLevel = currentPriorityLevel;
-        return function() {
-          var previousPriorityLevel = currentPriorityLevel;
-          currentPriorityLevel = parentPriorityLevel;
-          try {
-            return callback.apply(this, arguments);
-          } finally {
-            currentPriorityLevel = previousPriorityLevel;
-          }
-        };
-      };
-    })(scheduler_production);
-    return scheduler_production;
-  }
-  var hasRequiredScheduler;
-  function requireScheduler() {
-    if (hasRequiredScheduler) return scheduler.exports;
-    hasRequiredScheduler = 1;
-    {
-      scheduler.exports = requireScheduler_production();
-    }
-    return scheduler.exports;
   }
   var reactDom = { exports: {} };
   var reactDom_production = {};
@@ -12472,6 +13550,34 @@
     return client.exports;
   }
   var clientExports = requireClient();
+  var reactExports = requireReact();
+  const React = getDefaultExportFromCjs(reactExports);
+  class BaseRenderer {
+async renderReactComponent(component, props) {
+      const container = createReactContainer();
+      const root = clientExports.createRoot(container);
+      await new Promise((resolve) => {
+        root.render(
+jsxRuntimeExports.jsx(React.StrictMode, { children: React.createElement(component, props) })
+        );
+        setTimeout(() => {
+          resolve();
+        }, 0);
+      });
+      createDirectElement(container.innerHTML);
+    }
+async fetchFlowData(uuid, action, viewerName = "Auto") {
+      return await getFlowData(`http://${window.location.host}/flows/${uuid}/${action}/content/${viewerName}.json`);
+    }
+parseJSON(content) {
+      try {
+        return JSON.parse(content);
+      } catch (error) {
+        console.error(`Failed to parse JSON content:`, error);
+        throw error;
+      }
+    }
+  }
   function formatTextWithLineBreaks(content) {
     if (!content) return "";
     return `<pre class="text-content" style="white-space: pre-wrap; margin: 0;">${content.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`;
@@ -12506,35 +13612,35 @@
   function isAnthropicContent(content) {
     return content && typeof content === "object" && typeof content.type === "string";
   }
-  const InfoItem$1 = ({ label, value }) => {
+  const InfoItem$2 = ({ label, value }) => {
     if (value === void 0) return jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, {});
     return jsxRuntimeExports.jsxs("div", { className: "info-item", children: [
 jsxRuntimeExports.jsx("div", { className: "info-label", children: label }),
 jsxRuntimeExports.jsx("div", { className: "info-value", children: typeof value === "boolean" ? value ? "true" : "false" : value })
     ] });
   };
-  const MessageContent = ({ message }) => {
+  const MessageContent$1 = ({ message }) => {
     console.log("Rendering message content:", message);
     if (message.role === "tool") {
       return jsxRuntimeExports.jsx("div", { className: "prose", "data-type": "tool", dangerouslySetInnerHTML: { __html: renderToolMessage(message.content) } });
     } else if (typeof message.content === "string") {
       return jsxRuntimeExports.jsx("div", { className: "prose", "data-format": "string", dangerouslySetInnerHTML: { __html: renderChoiceTextContent(message.content) } });
     } else if (Array.isArray(message.content)) {
-      return jsxRuntimeExports.jsx("div", { "data-format": "array", children: message.content.map((item, idx) => jsxRuntimeExports.jsx(MessageContent, { message: item }, idx)) });
+      return jsxRuntimeExports.jsx("div", { "data-format": "array", children: message.content.map((item, idx) => jsxRuntimeExports.jsx(MessageContent$1, { message: item }, idx)) });
     } else if (isAnthropicContent(message)) {
-      return jsxRuntimeExports.jsx(AnthropicContent, { content: message });
+      return jsxRuntimeExports.jsx(AnthropicContent$1, { content: message });
     } else {
       return jsxRuntimeExports.jsx("div", { className: "json-content", "data-format": "object", children: JSON.stringify(message.content, null, 2) });
     }
   };
-  const AnthropicContent = ({ content }) => {
+  const AnthropicContent$1 = ({ content }) => {
     if (content.type === "text") {
       return jsxRuntimeExports.jsx("div", { className: "prose", "data-format": "string", "data-content-type": "anthropic", dangerouslySetInnerHTML: { __html: renderChoiceTextContent(content.text) } });
     } else {
       return jsxRuntimeExports.jsx("div", { className: "json-content", "data-format": "object", "data-content-type": "anthropic", children: JSON.stringify(content, null, 2) });
     }
   };
-  const Message = ({ message, index, isLast }) => {
+  const Message$1 = ({ message, index, isLast }) => {
     const [isOpen, setIsOpen] = reactExports.useState(isLast ? true : false);
     const roleClass = `role-${message.role}`;
     return jsxRuntimeExports.jsxs("details", { open: isOpen, className: "message-item", onChange: (e) => setIsOpen(e.target.open), children: [
@@ -12545,7 +13651,7 @@ jsxRuntimeExports.jsxs("span", { className: "text-small", children: [
           index + 1
         ] })
       ] }) }),
-jsxRuntimeExports.jsx("div", { className: "message-content", children: jsxRuntimeExports.jsx(MessageContent, { message }) })
+jsxRuntimeExports.jsx("div", { className: "message-content", children: jsxRuntimeExports.jsx(MessageContent$1, { message }) })
     ] });
   };
   const ParameterItem = ({ name, param, required }) => {
@@ -12600,23 +13706,23 @@ jsxRuntimeExports.jsxs("span", { className: "text-small", children: [
 jsxRuntimeExports.jsx("div", { className: "tool-content", children: jsxRuntimeExports.jsx(ToolContent, { tool, index }) })
     ] });
   };
-  const BasicInfo = ({ obj }) => {
+  const BasicInfo$1 = ({ obj }) => {
     const [isOpen, setIsOpen] = reactExports.useState(true);
     return jsxRuntimeExports.jsxs("details", { open: isOpen, className: "section", onChange: (e) => setIsOpen(e.target.open), children: [
 jsxRuntimeExports.jsx("summary", { className: "section-header", children: jsxRuntimeExports.jsx("span", { className: "section-title", children: "Basic Info" }) }),
 jsxRuntimeExports.jsxs("div", { className: "section-content", children: [
-jsxRuntimeExports.jsx(InfoItem$1, { label: "model", value: obj.model }),
-jsxRuntimeExports.jsx(InfoItem$1, { label: "Temperature", value: obj.temperature }),
-jsxRuntimeExports.jsx(InfoItem$1, { label: "Max Tokens", value: obj.max_tokens }),
-jsxRuntimeExports.jsx(InfoItem$1, { label: "Top P", value: obj.top_p }),
-jsxRuntimeExports.jsx(InfoItem$1, { label: "Frequency Penalty", value: obj.frequency_penalty }),
-jsxRuntimeExports.jsx(InfoItem$1, { label: "Presence Penalty", value: obj.presence_penalty }),
-jsxRuntimeExports.jsx(InfoItem$1, { label: "Stream", value: obj.stream }),
-jsxRuntimeExports.jsx(InfoItem$1, { label: "n", value: obj.n })
+jsxRuntimeExports.jsx(InfoItem$2, { label: "model", value: obj.model }),
+jsxRuntimeExports.jsx(InfoItem$2, { label: "Temperature", value: obj.temperature }),
+jsxRuntimeExports.jsx(InfoItem$2, { label: "Max Tokens", value: obj.max_tokens }),
+jsxRuntimeExports.jsx(InfoItem$2, { label: "Top P", value: obj.top_p }),
+jsxRuntimeExports.jsx(InfoItem$2, { label: "Frequency Penalty", value: obj.frequency_penalty }),
+jsxRuntimeExports.jsx(InfoItem$2, { label: "Presence Penalty", value: obj.presence_penalty }),
+jsxRuntimeExports.jsx(InfoItem$2, { label: "Stream", value: obj.stream }),
+jsxRuntimeExports.jsx(InfoItem$2, { label: "n", value: obj.n })
       ] })
     ] });
   };
-  const Messages = ({ messages = [] }) => {
+  const Messages$1 = ({ messages = [] }) => {
     const [isOpen, setIsOpen] = reactExports.useState(true);
     return jsxRuntimeExports.jsxs("details", { open: isOpen, className: "section", onChange: (e) => setIsOpen(e.target.open), children: [
 jsxRuntimeExports.jsx("summary", { className: "section-header", children: jsxRuntimeExports.jsxs("span", { className: "section-title", children: [
@@ -12627,7 +13733,7 @@ jsxRuntimeExports.jsx("summary", { className: "section-header", children: jsxRun
           ")"
         ] }) : ""
       ] }) }),
-jsxRuntimeExports.jsx("div", { className: "section-content", children: !messages.length ? jsxRuntimeExports.jsx("div", { className: "empty-state", children: "no messages" }) : messages.map((message, index) => jsxRuntimeExports.jsx(Message, { message, index, isLast: index === messages.length - 1 }, index)) })
+jsxRuntimeExports.jsx("div", { className: "section-content", children: !messages.length ? jsxRuntimeExports.jsx("div", { className: "empty-state", children: "no messages" }) : messages.map((message, index) => jsxRuntimeExports.jsx(Message$1, { message, index, isLast: index === messages.length - 1 }, index)) })
     ] });
   };
   const Prompt = ({ prompt }) => {
@@ -12659,12 +13765,36 @@ jsxRuntimeExports.jsxs("div", { className: "header", children: [
 jsxRuntimeExports.jsx("h1", { children: "OpenAI API Request" }),
 jsxRuntimeExports.jsx("p", {})
       ] }),
-jsxRuntimeExports.jsx(BasicInfo, { obj }),
-      obj.messages && jsxRuntimeExports.jsx(Messages, { messages: obj.messages }),
+jsxRuntimeExports.jsx(BasicInfo$1, { obj }),
+      obj.messages && jsxRuntimeExports.jsx(Messages$1, { messages: obj.messages }),
       obj.prompt && jsxRuntimeExports.jsx(Prompt, { prompt: obj.prompt }),
       obj.tools && jsxRuntimeExports.jsx(Tools, { tools: obj.tools })
     ] });
   };
+  function isLLMRequest(parsedObj) {
+    return !!parsedObj && (!!parsedObj["messages"] || !!parsedObj["prompt"]) && !!parsedObj["model"];
+  }
+  class OpenAIRequestRenderer extends BaseRenderer {
+    name = "openai-request";
+    async render(uuid, action, viewerName = "Auto") {
+      const json = await this.fetchFlowData(uuid, action, viewerName);
+      if (!json.text) {
+        console.warn("response has no text field.");
+        return;
+      }
+      let parsedObj;
+      try {
+        parsedObj = this.parseJSON(json.text);
+      } catch (e) {
+        console.error(e);
+        return;
+      }
+      if (!isLLMRequest(parsedObj)) {
+        return;
+      }
+      await this.renderReactComponent(OpenAIRequestVisualizer, { obj: parsedObj });
+    }
+  }
   const getFinishReasonClass = (finishReason) => {
     const classMap = {
       "stop": "finish-stop",
@@ -12674,7 +13804,7 @@ jsxRuntimeExports.jsx(BasicInfo, { obj }),
     };
     return classMap[finishReason] || "";
   };
-  const InfoItem = ({ label, value, formatter }) => {
+  const InfoItem$1 = ({ label, value, formatter }) => {
     if (value === void 0 || value === null) return null;
     const displayValue = formatter ? formatter(value) : value;
     return jsxRuntimeExports.jsxs("div", { className: "info-item", children: [
@@ -12696,12 +13826,12 @@ jsxRuntimeExports.jsx("div", { className: "usage-value", children: value })
     return jsxRuntimeExports.jsxs("details", { open: isOpen, className: "section", onChange: (e) => setIsOpen(e.target.open), children: [
 jsxRuntimeExports.jsx("summary", { className: "section-header", children: jsxRuntimeExports.jsx("span", { className: "section-title", children: "Basic Info" }) }),
 jsxRuntimeExports.jsxs("div", { className: "section-content", children: [
-jsxRuntimeExports.jsx(InfoItem, { label: "Response ID", value: obj.id }),
-jsxRuntimeExports.jsx(InfoItem, { label: "Model", value: obj.model }),
-jsxRuntimeExports.jsx(InfoItem, { label: "Object Type", value: obj.object }),
-jsxRuntimeExports.jsx(InfoItem, { label: "Created", value: createdDate }),
-jsxRuntimeExports.jsx(InfoItem, { label: "System Fingerprint", value: obj.system_fingerprint }),
-        eventCount !== void 0 && jsxRuntimeExports.jsx(InfoItem, { label: "Events Count", value: eventCount || 0 })
+jsxRuntimeExports.jsx(InfoItem$1, { label: "Response ID", value: obj.id }),
+jsxRuntimeExports.jsx(InfoItem$1, { label: "Model", value: obj.model }),
+jsxRuntimeExports.jsx(InfoItem$1, { label: "Object Type", value: obj.object }),
+jsxRuntimeExports.jsx(InfoItem$1, { label: "Created", value: createdDate }),
+jsxRuntimeExports.jsx(InfoItem$1, { label: "System Fingerprint", value: obj.system_fingerprint }),
+        eventCount !== void 0 && jsxRuntimeExports.jsx(InfoItem$1, { label: "Events Count", value: eventCount || 0 })
       ] })
     ] });
   };
@@ -12894,57 +14024,25 @@ jsxRuntimeExports.jsx(ChoicesSection, { choices: response.choices, eventCount })
   const OpenAIResponseVisualizer = ({ response }) => {
     return jsxRuntimeExports.jsx(BaseOpenAIResponseVisualizer, { response, title: "OpenAI API Response" });
   };
-  const OpenAISSEResponseVisualizer = (obj) => {
-    const response = {
-      id: void 0,
-object: "chat.completion",
-created: obj.created,
-      model: obj.model,
-      system_fingerprint: obj.system_fingerprint,
-      usage: obj.usage,
-      choices: obj.choices
-    };
-    return jsxRuntimeExports.jsx(
-      BaseOpenAIResponseVisualizer,
-      {
-        response,
-        eventCount: obj.eventCount,
-        title: "OpenAI SSE Response",
-        subtitle: "Server-Sent Events Response Visualization"
-      }
-    );
-  };
-  class LRUCache {
-    maxSize;
-    cache;
-    constructor(maxSize) {
-      this.maxSize = maxSize;
-      this.cache = new Map();
-    }
-    get(key) {
-      const value = this.cache.get(key);
-      if (value !== void 0) {
-        this.cache.delete(key);
-        this.cache.set(key, value);
-      }
-      return value;
-    }
-    put(key, value) {
-      if (this.cache.size >= this.maxSize) {
-        const firstKey = this.cache.keys().next().value;
-        if (firstKey !== void 0) {
-          this.cache.delete(firstKey);
+  function isLLMResponse(parsedObj) {
+    return !!parsedObj && !!parsedObj["choices"] && !!parsedObj["model"];
+  }
+  class OpenAIResponseRenderer extends BaseRenderer {
+    name = "openai-response";
+    async render(uuid, action, viewerName = "Auto") {
+      let json = await this.fetchFlowData(uuid, action, viewerName);
+      if (json.view_name === "JSON") {
+        try {
+          const parsedObj = this.parseJSON(json.text);
+          if (!isLLMResponse(parsedObj)) {
+            return;
+          }
+          await this.renderReactComponent(OpenAIResponseVisualizer, { response: parsedObj });
+        } catch (e) {
+          console.error("Error parsing JSON response:", e);
         }
       }
-      this.cache.set(key, value);
     }
-  }
-  function omit(obj, keys) {
-    const result = { ...obj };
-    keys.forEach((key) => {
-      delete result[key];
-    });
-    return result;
   }
   function processSSEEvents(events) {
     if (!events.length) {
@@ -13023,951 +14121,555 @@ created: obj.created,
       logprobs: agg.logprobs
     })).sort((a, b) => a.index - b.index);
   }
-  var _unsafeWindow = (() => typeof unsafeWindow != "undefined" ? unsafeWindow : void 0)();
-  const getStyles = () => {
-    return `details.llm-better-view {
-  border: 1px solid #aaa;
-  border-radius: 4px;
-  margin-bottom: 16px;
-}
-
-details[open].llm-better-view summary {
-  border-bottom: 1px solid #aaa;
-  margin-bottom: 0.5em;
-}
-
-.llm-better-view {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 10px;
-  line-height: 1.6;
-  box-sizing: border-box;
-  max-width: 100%;
-  margin: 0 auto;
-  width: 100%;
-}
-
-.llm-better-view * {
-  box-sizing: border-box;
-}
-
-.llm-better-view,
-.llm-better-view * {
-  /* Prevent overflow on all elements */
-  max-width: 100%;
-}
-
-details.llm-better-view {
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  margin: 16px 0;
-  background: #ffffff;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-  overflow: hidden; /* Prevent content overflow */
-}
-
-.llm-better-view summary {
-  font-weight: 600;
-  padding: 12px 16px;
-  cursor: pointer;
-  background: #f9fafb;
-  border-radius: 6px;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-  color: #1f2937;
-  font-size: 1.6rem;
-  transition: background-color 0.2s;
-  word-break: break-word; /* Prevent long words from overflowing */
-}
-
-.llm-better-view summary:hover {
-  background: #f3f4f6;
-}
-
-details[open].llm-better-view summary {
-  border-bottom: 1px solid #e5e7eb;
-  margin-bottom: 0;
-}
-
-/* Container styles */
-.llm-better-view .container {
-  padding: 16px;
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden; /* Prevent container overflow */
-}
-
-.llm-better-view .header {
-  text-align: center;
-  margin-bottom: 20px;
-  position: relative;
-  padding: 0 16px;
-  width: 100%;
-  max-width: 100%;
-  overflow-wrap: break-word; /* Handle long words */
-}
-
-.llm-better-view .header h1 {
-  color: #111827;
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-  word-break: break-word; /* Prevent title overflow */
-}
-
-.llm-better-view .header p {
-  color: #6b7280;
-  font-size: 1.4rem;
-  word-break: break-word; /* Prevent description overflow */
-}
-
-.llm-better-view .global-collapse-btn {
-  position: absolute;
-  top: 0;
-  right: 0;
-  background: #e5e7eb;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1.4rem;
-  color: #374151;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  transition: background-color 0.2s;
-  font-weight: 500;
-  flex-shrink: 0; /* Prevent button from shrinking */
-}
-
-.llm-better-view .global-collapse-btn:hover {
-  background: #d1d5db;
-}
-
-.llm-better-view .section {
-  background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  margin-bottom: 16px;
-  overflow: hidden;
-  border: 1px solid #e5e7eb;
-  width: 100%;
-  max-width: 100%;
-}
-
-.llm-better-view .section:last-child {
-  margin-bottom: 0;
-}
-
-.llm-better-view .section-header {
-  padding: 12px 16px;
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: background-color 0.2s;
-  width: 100%;
-  max-width: 100%;
-  word-break: break-word; /* Prevent header text overflow */
-  font-size: 1.4rem;
-}
-
-.llm-better-view .section-header:hover {
-  background: #f3f4f6;
-}
-
-.llm-better-view .section-title {
-  font-weight: 600;
-  font-size: 1.6rem;
-  color: #111827;
-  word-break: break-word; /* Prevent title overflow */
-  flex-grow: 1; /* Allow title to take available space */
-  margin-right: 8px;
-}
-
-.llm-better-view .section-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0; /* Prevent controls from shrinking */
-}
-
-.llm-better-view .expand-collapse-btn {
-  background: #dbeafe;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1.4rem;
-  color: #1d4ed8;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  transition: background-color 0.2s;
-  font-weight: 500;
-  white-space: nowrap; /* Prevent button text wrapping */
-  flex-shrink: 0; /* Prevent button from shrinking */
-}
-
-.llm-better-view .expand-collapse-btn:hover {
-  background: #bfdbfe;
-}
-
-.llm-better-view .expand-collapse-btn.tools {
-  background: #f3e8ff;
-  color: #7c3aed;
-}
-
-.llm-better-view .expand-collapse-btn.tools:hover {
-  background: #e9d5ff;
-}
-
-.llm-better-view .toggle-icon {
-  transition: transform 0.2s;
-  color: #6b7280;
-  font-size: 1.2rem;
-  flex-shrink: 0; /* Prevent icon from shrinking */
-}
-
-.llm-better-view .toggle-icon.rotated {
-  transform: rotate(180deg);
-}
-
-.llm-better-view .section-content {
-  padding: 16px;
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden; /* Prevent content overflow */
-}
-
-.llm-better-view .info-item {
-  padding: 12px 0;
-  border-bottom: 1px solid #f3f4f6;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  max-width: 100%;
-}
-
-.llm-better-view .info-item:last-child {
-  border-bottom: none;
-}
-
-.llm-better-view .info-label {
-  font-size: 1.4rem;
-  color: #6b7280;
-  font-weight: 500;
-  min-width: 140px;
-  word-break: break-word; /* Prevent label overflow */
-}
-
-.llm-better-view .info-value {
-  font-weight: 600;
-  color: #111827;
-  font-size: 1.4rem;
-  text-align: right;
-  word-break: break-word; /* Handle long values */
-  max-width: 70%;
-  overflow-wrap: break-word; /* Additional word breaking */
-}
-
-.llm-better-view .message-item,
-.llm-better-view .tool-item {
-  border-bottom: 1px solid #e5e7eb;
-  padding: 12px 0;
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden; /* Prevent item overflow */
-}
-
-.llm-better-view .message-item:last-child,
-.llm-better-view .tool-item:last-child {
-  border-bottom: none;
-}
-
-.llm-better-view .message-header,
-.llm-better-view .tool-header {
-  padding: 8px 0;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  max-width: 100%;
-  word-break: break-word; /* Handle long header text */
-  font-size: 1.4rem;
-}
-
-.llm-better-view .message-header:hover,
-.llm-better-view .tool-header:hover {
-  background: #f9fafb;
-  margin: 0 -16px;
-  padding: 8px 16px;
-  border-radius: 4px;
-  width: calc(100% + 32px); /* Account for negative margins */
-  max-width: calc(100% + 32px);
-}
-
-.llm-better-view .role-badge {
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 1.2rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  flex-shrink: 0; /* Prevent badge from shrinking */
-  white-space: nowrap; /* Prevent badge text wrapping */
-}
-
-.llm-better-view .role-user {
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-
-.llm-better-view .role-assistant {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.llm-better-view .role-system {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.llm-better-view .role-tool {
-  background: #f3e8ff;
-  color: #7c3aed;
-}
-
-.llm-better-view .tool-name-badge {
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 1.4rem;
-  font-weight: 700;
-  text-transform: none;
-  background: #f3e8ff;
-  color: #7c3aed;
-  font-family: "Monaco", "Menlo", monospace;
-  word-break: break-word; /* Handle long tool names */
-  max-width: 100%;
-  overflow-wrap: break-word; /* Additional word breaking */
-}
-
-.llm-better-view .message-content,
-.llm-better-view .tool-content {
-  padding: 12px 0;
-  font-size: 1.4rem;
-  background-color: transparent;
-  overflow-y: auto;
-  width: 100%;
-  max-width: 100%;
-  word-break: break-word; /* Handle long content */
-  overflow-wrap: break-word; /* Additional word breaking */
-}
-
-.llm-better-view .json-content {
-  font-family: "Monaco", "Menlo", monospace;
-  background: #1f2937;
-  color: #f9fafb;
-  padding: 16px;
-  border-radius: 6px;
-  font-size: 1.2rem;
-  white-space: pre-wrap;
-  overflow-x: auto; /* Allow horizontal scrolling for long lines */
-  margin: 8px 0;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-.llm-better-view .usage-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  width: 100%;
-  max-width: 100%;
-}
-
-.llm-better-view .usage-item {
-  background: #f9fafb;
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  width: 100%;
-  max-width: 100%;
-  word-break: break-word; /* Handle long usage values */
-}
-
-.llm-better-view .usage-label {
-  font-size: 1.4rem;
-  color: #6b7280;
-  margin-bottom: 4px;
-  word-break: break-word; /* Prevent label overflow */
-}
-
-.llm-better-view .usage-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #111827;
-  word-break: break-word; /* Handle long values */
-}
-
-.llm-better-view .choice-item {
-  border-radius: 8px;
-  margin-bottom: 16px;
-  overflow: hidden;
-  border: 1px solid #e5e7eb;
-  width: 100%;
-  max-width: 100%;
-}
-
-.llm-better-view .choice-header {
-  background: #f9fafb;
-  padding: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border: none;
-  width: 100%;
-  text-align: left;
-  word-break: break-word; /* Handle long header text */
-  font-size: 1.4rem;
-}
-
-.llm-better-view .choice-header:hover {
-  background: #f3f4f6;
-}
-
-.llm-better-view .choice-badge {
-  background: #10b981;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 1.2rem;
-  font-weight: 600;
-  flex-shrink: 0; /* Prevent badge from shrinking */
-  white-space: nowrap; /* Prevent badge text wrapping */
-}
-
-.llm-better-view .choice-content {
-  padding: 16px;
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden; /* Prevent content overflow */
-}
-
-.llm-better-view .choice-meta {
-  display: flex;
-  gap: 24px;
-  margin-bottom: 16px;
-  font-size: 1.4rem;
-  flex-wrap: wrap;
-  width: 100%;
-  max-width: 100%;
-}
-
-.llm-better-view .choice-meta-item {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  min-width: 0; /* Allow flex items to shrink below content size */
-}
-
-.llm-better-view .choice-meta-item span:first-child {
-  font-weight: 600;
-  color: #374151;
-  word-break: break-word; /* Handle long labels */
-}
-
-/* GitHub-style Markdown prose */
-.llm-better-view .prose {
-  line-height: 1.7;
-  color: #374151;
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden; /* Prevent prose overflow */
-  word-break: break-word; /* Handle long words */
-  overflow-wrap: break-word; /* Additional word breaking */
-  font-size: 1.4rem;
-}
-
-.llm-better-view .prose h1,
-.llm-better-view .prose h2,
-.llm-better-view .prose h3,
-.llm-better-view .prose h4,
-.llm-better-view .prose h5,
-.llm-better-view .prose h6 {
-  margin-top: 1.5em;
-  margin-bottom: 0.75em;
-  font-weight: 700;
-  line-height: 1.25;
-  color: #111827;
-  word-break: break-word; /* Handle long headers */
-  max-width: 100%;
-}
-
-.llm-better-view .prose h1 {
-  font-size: 2em;
-  border-bottom: 1px solid #e5e7eb;
-  padding-bottom: 0.5rem;
-}
-
-.llm-better-view .prose h2 {
-  font-size: 1.8em;
-  border-bottom: 1px solid #e5e7eb;
-  padding-bottom: 0.5rem;
-}
-
-.llm-better-view .prose h3 {
-  font-size: 1.6em;
-}
-
-.llm-better-view .prose h4 {
-  font-size: 1.4rem;
-}
-
-.llm-better-view .prose h5 {
-  font-size: 1.2rem;
-}
-
-.llm-better-view .prose h6 {
-  font-size: 1.1em;
-  color: #6b7280;
-}
-
-.llm-better-view .prose p {
-  margin-top: 0;
-  margin-bottom: 1em;
-  word-break: break-word; /* Handle long paragraphs */
-  max-width: 100%;
-  font-size: 1.4rem;
-}
-
-.llm-better-view .prose ul,
-.llm-better-view .prose ol {
-  margin-top: 0;
-  margin-bottom: 1em;
-  padding-left: 1.75em;
-  width: 100%;
-  max-width: 100%;
-  word-break: break-word; /* Handle long list items */
-}
-
-.llm-better-view .prose li {
-  margin-bottom: 0.25em;
-  word-break: break-word; /* Handle long list items */
-}
-
-.llm-better-view .prose blockquote {
-  margin: 16px 0;
-  padding: 0 16px;
-  color: #6b7280;
-  border-left: 4px solid #d1d5db;
-  font-style: italic;
-  width: 100%;
-  max-width: 100%;
-  word-break: break-word; /* Handle long quotes */
-}
-
-.llm-better-view .prose code {
-  background: #f3f4f6;
-  padding: 0.2em 0.4em;
-  border-radius: 0.375em;
-  font-size: 1.1em;
-  font-family: "Monaco", "Menlo", "Consolas", monospace;
-  word-break: break-word; /* Handle long inline code */
-  overflow-wrap: break-word; /* Additional word breaking */
-}
-
-.llm-better-view .prose pre {
-  background: #1f2937;
-  color: #f9fafb;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  overflow-x: auto; /* Allow horizontal scrolling */
-  margin: 1rem 0;
-  border: 1px solid #d1d5db;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-.llm-better-view .prose pre code {
-  background: none;
-  padding: 0;
-  word-break: normal; /* Allow normal breaking in code blocks */
-  white-space: pre; /* Preserve whitespace in code blocks */
-}
-
-/* Style for plain text content preserving whitespace */
-.llm-better-view .prose pre.text-content {
-  background: transparent;
-  color: inherit;
-  padding: 0;
-  border-radius: 0;
-  border: none;
-  margin: 0;
-  overflow-x: visible;
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
-}
-
-.llm-better-view .prose a {
-  color: #2563eb;
-  text-decoration: none;
-  font-weight: 500;
-  word-break: break-word; /* Handle long URLs */
-}
-
-.llm-better-view .prose a:hover {
-  text-decoration: underline;
-}
-
-.llm-better-view .prose strong {
-  font-weight: 700;
-}
-
-.llm-better-view .prose em {
-  font-style: italic;
-}
-
-.llm-better-view .prose table {
-  border-collapse: collapse;
-  margin: 16px 0;
-  width: 100%;
-  max-width: 100%;
-  overflow-x: auto; /* Allow horizontal scrolling */
-  display: block; /* Enable scrolling */
-  box-sizing: border-box;
-}
-
-.llm-better-view .prose th,
-.llm-better-view .prose td {
-  border: 1px solid #d1d5db;
-  padding: 8px 12px;
-  text-align: left;
-  word-break: break-word; /* Handle long cell content */
-}
-
-.llm-better-view .prose th {
-  background: #f9fafb;
-  font-weight: 600;
-}
-
-.llm-better-view .tool-description {
-  margin: 8px 0;
-  font-size: 1.5rem;
-  color: #374151;
-  word-break: break-word; /* Handle long descriptions */
-}
-
-.llm-better-view .tool-call-name {
-  font-weight: 700;
-  color: #111827;
-  font-size: 1.5rem;
-  margin-bottom: 8px;
-  word-break: break-word; /* Handle long tool names */
-}
-
-.llm-better-view .tool-parameters {
-  margin-top: 12px;
-  width: 100%;
-  max-width: 100%;
-}
-
-.llm-better-view .tool-parameters-title {
-  font-weight: 700;
-  color: #111827;
-  margin-bottom: 8px;
-  font-size: 1.3rem;
-  word-break: break-word; /* Handle long titles */
-}
-
-.llm-better-view .parameter-item {
-  margin-bottom: 12px;
-  padding: 12px;
-  background: #f9fafb;
-  border-radius: 6px;
-  border-left: 4px solid #3b82f6;
-  width: 100%;
-  max-width: 100%;
-  word-break: break-word; /* Handle long parameter content */
-}
-
-.llm-better-view .parameter-name {
-  font-weight: 700;
-  font-size: 1.4rem;
-  color: #111827;
-  font-family: "Monaco", "Menlo", monospace;
-  margin-bottom: 4px;
-  word-break: break-word; /* Handle long parameter names */
-}
-
-.llm-better-view .parameter-type {
-  font-size: 1.1rem;
-  color: #7c3aed;
-  background: #f3e8ff;
-  padding: 2px 6px;
-  border-radius: 4px;
-  margin-left: 8px;
-  flex-shrink: 0; /* Prevent type badge from shrinking */
-  white-space: nowrap; /* Prevent type text wrapping */
-}
-
-.llm-better-view .parameter-required {
-  font-size: 1rem;
-  color: #dc2626;
-  background: #fef2f2;
-  padding: 2px 6px;
-  border-radius: 4px;
-  margin-left: 6px;
-  flex-shrink: 0; /* Prevent required badge from shrinking */
-  white-space: nowrap; /* Prevent required text wrapping */
-}
-
-.llm-better-view .parameter-description {
-  font-size: 1.3rem;
-  color: #6b7280;
-  margin-top: 4px;
-  word-break: break-word; /* Handle long descriptions */
-}
-
-.llm-better-view .empty-state {
-  text-align: center;
-  color: #6b7280;
-  font-style: italic;
-  padding: 48px 24px;
-  width: 100%;
-  max-width: 100%;
-  word-break: break-word; /* Handle long empty state messages */
-}
-
-/* SVG Icons */
-.llm-better-view .icon {
-  width: 14px;
-  height: 14px;
-  fill: currentColor;
-  flex-shrink: 0; /* Prevent icons from shrinking */
-}
-
-.llm-better-view .event-badge {
-  position: absolute;
-  top: 16px;
-  right: 24px;
-  background: #4f46e5;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-weight: 600;
-  flex-shrink: 0; /* Prevent badge from shrinking */
-}
-
-.llm-better-view .content {
-  padding: 0;
-  width: 100%;
-  max-width: 100%;
-}
-
-.llm-better-view .finish-reason-badge {
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-weight: 500;
-  flex-shrink: 0; /* Prevent badge from shrinking */
-  white-space: nowrap; /* Prevent badge text wrapping */
-}
-
-.llm-better-view .finish-stop {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.llm-better-view .finish-length {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.llm-better-view .finish-tool-calls {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.llm-better-view .finish-content-filter {
-  background: #fecaca;
-  color: #991b1b;
-}
-
-.llm-better-view .content-section {
-  margin-bottom: 20px;
-  width: 100%;
-  max-width: 100%;
-}
-
-.llm-better-view .content-section h4 {
-  margin-bottom: 12px;
-  font-size: 1.4rem;
-  color: #111827;
-  font-weight: 600;
-  word-break: break-word; /* Handle long section titles */
-}
-
-.llm-better-view .tool-calls-container {
-  margin-top: 12px;
-  width: 100%;
-  max-width: 100%;
-}
-
-.llm-better-view .tool-calls-container h4 {
-  margin-bottom: 12px;
-  font-size: 1rem;
-  color: #111827;
-  font-weight: 600;
-  word-break: break-word; /* Handle long container titles */
-}
-
-.llm-better-view .tool-call-item {
-  border-radius: 6px;
-  margin-bottom: 12px;
-  overflow: hidden;
-  border: 1px solid #e5e7eb;
-  width: 100%;
-  max-width: 100%;
-}
-
-.llm-better-view .tool-call-header {
-  background: #fafafa;
-  padding: 12px 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border: none;
-  width: 100%;
-  text-align: left;
-  word-break: break-word; /* Handle long header text */
-  font-size: 1.4rem;
-}
-
-.llm-better-view .tool-call-header:hover {
-  background: #f5f5f5;
-}
-
-.llm-better-view .tool-call-id {
-  font-size: 1.2rem;
-  color: #6b7280;
-  word-break: break-word; /* Handle long IDs */
-}
-
-.llm-better-view .tool-call-content {
-  padding: 12px 16px;
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden; /* Prevent content overflow */
-}
-
-.llm-better-view .events-timeline {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-  max-width: 100%;
-}
-
-.llm-better-view .event-item {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  overflow: hidden;
-  width: 100%;
-  max-width: 100%;
-}
-
-.llm-better-view .event-header {
-  background: #f9fafb;
-  padding: 12px 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border: none;
-  width: 100%;
-  text-align: left;
-  word-break: break-word; /* Handle long header text */
-  font-size: 1.4rem;
-}
-
-.llm-better-view .event-header:hover {
-  background: #f3f4f6;
-}
-
-.llm-better-view .event-meta {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap; /* Allow meta items to wrap */
-}
-
-.llm-better-view .event-type-badge {
-  background: #e5e7eb;
-  color: #374151;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-weight: 500;
-  flex-shrink: 0; /* Prevent badge from shrinking */
-  white-space: nowrap; /* Prevent badge text wrapping */
-}
-
-.llm-better-view .event-timestamp {
-  font-size: 1.2rem;
-  color: #6b7280;
-  font-family: 'Monaco', 'Menlo', monospace;
-  word-break: break-word; /* Handle long timestamps */
-}
-
-.llm-better-view .event-content {
-  padding: 16px;
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden; /* Prevent content overflow */
-}
-
-/* Utility classes for inline styles */
-.llm-better-view .flex-container {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.llm-better-view .text-small {
-  font-size: 1.3rem; /* Adjusted for 10px base font */
-  color: #1e293b;
-}
-
-.llm-better-view .margin-bottom-sm {
-  margin-bottom: 8px;
-}
-
-.llm-better-view .margin-top-md {
-  margin-top: 12px;
-}
-
-.llm-better-view [data-content-type="anthropic"] {
-  margin: 16px 0;
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px solid #fed7aa;
-  background: #fffbeb;
-  width: 100%;
-  max-width: 100%;
-  word-break: break-word; /* Handle long anthropic content */
-}
-`;
+  const OpenAISSEResponseVisualizer = (obj) => {
+    const response = {
+      id: void 0,
+object: "chat.completion",
+created: obj.created,
+      model: obj.model,
+      system_fingerprint: obj.system_fingerprint,
+      usage: obj.usage,
+      choices: obj.choices
+    };
+    return jsxRuntimeExports.jsx(
+      BaseOpenAIResponseVisualizer,
+      {
+        response,
+        eventCount: obj.eventCount,
+        title: "OpenAI SSE Response",
+        subtitle: "Server-Sent Events Response Visualization"
+      }
+    );
   };
+  class OpenAISSERenderer extends BaseRenderer {
+    name = "openai-sse";
+    async render(uuid, action, viewerName = "Auto") {
+      let json = await this.fetchFlowData(uuid, action, viewerName);
+      if (json.view_name === "Raw") {
+        const events = [];
+        json.text.split("\n").forEach((line) => {
+          line = line.trim();
+          if (line.startsWith("data:")) {
+            const dataContent = line.slice(5);
+            if (dataContent === "[DONE]") return;
+            try {
+              events.push(this.parseJSON(dataContent));
+            } catch {
+            }
+          }
+        });
+        const input = processSSEEvents(events);
+        await this.renderReactComponent(OpenAISSEResponseVisualizer, {
+          model: input.model,
+          created: input.created,
+          system_fingerprint: input.system_fingerprint,
+          eventCount: input.eventCount,
+          usage: input.usage,
+          choices: input.choices
+        });
+      }
+    }
+  }
+  const OpenAIProvider = {
+    name: "openai",
+    detector: new OpenAIDetector(),
+    requestRenderer: new OpenAIRequestRenderer(),
+    responseRenderer: new OpenAIResponseRenderer(),
+    sseRenderer: new OpenAISSERenderer()
+  };
+  class AnthropicDetector {
+    name = "anthropic";
+    detect(flow) {
+      return flow.request.path.endsWith("/messages");
+    }
+  }
+  const InfoItem = ({ label, value }) => {
+    if (value === void 0) return jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, {});
+    return jsxRuntimeExports.jsxs("div", { className: "info-item", children: [
+jsxRuntimeExports.jsx("div", { className: "info-label", children: label }),
+jsxRuntimeExports.jsx("div", { className: "info-value", children: typeof value === "boolean" ? value ? "true" : "false" : value })
+    ] });
+  };
+  const MessageContent = ({ message }) => {
+    if (typeof message.content === "string") {
+      return jsxRuntimeExports.jsx("div", { className: "prose", "data-format": "string", dangerouslySetInnerHTML: { __html: renderChoiceTextContent(message.content) } });
+    } else if (Array.isArray(message.content)) {
+      return jsxRuntimeExports.jsx("div", { "data-format": "array", children: message.content.map((item, idx) => jsxRuntimeExports.jsxs("div", { className: "anthropic-content-block", children: [
+jsxRuntimeExports.jsx("div", { className: "content-type", children: item.type }),
+        item.text && jsxRuntimeExports.jsx("div", { className: "prose", "data-format": "string", dangerouslySetInnerHTML: { __html: renderChoiceTextContent(item.text) } }),
+        item.image && jsxRuntimeExports.jsx("div", { className: "image-content", children: JSON.stringify(item.image) })
+      ] }, idx)) });
+    } else if (isAnthropicContent(message)) {
+      return jsxRuntimeExports.jsx(AnthropicContent, { content: message });
+    } else {
+      return jsxRuntimeExports.jsx("div", { className: "json-content", "data-format": "object", children: JSON.stringify(message.content, null, 2) });
+    }
+  };
+  const AnthropicContent = ({ content }) => {
+    if (content.type === "text") {
+      return jsxRuntimeExports.jsx("div", { className: "prose", "data-format": "string", "data-content-type": "anthropic", dangerouslySetInnerHTML: { __html: renderChoiceTextContent(content.text) } });
+    } else {
+      return jsxRuntimeExports.jsx("div", { className: "json-content", "data-format": "object", "data-content-type": "anthropic", children: JSON.stringify(content, null, 2) });
+    }
+  };
+  const Message = ({ message, index, isLast }) => {
+    const [isOpen, setIsOpen] = reactExports.useState(isLast ? true : false);
+    const roleClass = `role-${message.role || "unknown"}`;
+    return jsxRuntimeExports.jsxs("details", { open: isOpen, className: "message-item", onChange: (e) => setIsOpen(e.target.open), children: [
+jsxRuntimeExports.jsx("summary", { className: "message-header", children: jsxRuntimeExports.jsxs("div", { className: "flex-container", children: [
+jsxRuntimeExports.jsx("span", { className: `role-badge ${roleClass}`, children: message.role || "unknown" }),
+jsxRuntimeExports.jsxs("span", { className: "text-small", children: [
+          "#",
+          index + 1
+        ] })
+      ] }) }),
+jsxRuntimeExports.jsx("div", { className: "message-content", children: jsxRuntimeExports.jsx(MessageContent, { message }) })
+    ] });
+  };
+  const BasicInfo = ({ obj }) => {
+    const [isOpen, setIsOpen] = reactExports.useState(true);
+    return jsxRuntimeExports.jsxs("details", { open: isOpen, className: "section", onChange: (e) => setIsOpen(e.target.open), children: [
+jsxRuntimeExports.jsx("summary", { className: "section-header", children: jsxRuntimeExports.jsx("span", { className: "section-title", children: "Basic Info" }) }),
+jsxRuntimeExports.jsxs("div", { className: "section-content", children: [
+jsxRuntimeExports.jsx(InfoItem, { label: "model", value: obj.model }),
+jsxRuntimeExports.jsx(InfoItem, { label: "max_tokens", value: obj.max_tokens }),
+jsxRuntimeExports.jsx(InfoItem, { label: "temperature", value: obj.temperature }),
+jsxRuntimeExports.jsx(InfoItem, { label: "top_p", value: obj.top_p }),
+jsxRuntimeExports.jsx(InfoItem, { label: "top_k", value: obj.top_k }),
+jsxRuntimeExports.jsx(InfoItem, { label: "stop_sequences", value: obj.stop_sequences ? obj.stop_sequences.join(", ") : void 0 }),
+jsxRuntimeExports.jsx(InfoItem, { label: "stream", value: obj.stream })
+      ] })
+    ] });
+  };
+  const Messages = ({ messages = [] }) => {
+    const [isOpen, setIsOpen] = reactExports.useState(true);
+    return jsxRuntimeExports.jsxs("details", { open: isOpen, className: "section", onChange: (e) => setIsOpen(e.target.open), children: [
+jsxRuntimeExports.jsx("summary", { className: "section-header", children: jsxRuntimeExports.jsxs("span", { className: "section-title", children: [
+        "Messages",
+        messages.length ? jsxRuntimeExports.jsxs("span", { children: [
+          "(",
+          messages.length,
+          ")"
+        ] }) : ""
+      ] }) }),
+jsxRuntimeExports.jsx("div", { className: "section-content", children: !messages.length ? jsxRuntimeExports.jsx("div", { className: "empty-state", children: "no messages" }) : messages.map((message, index) => jsxRuntimeExports.jsx(Message, { message, index, isLast: index === messages.length - 1 }, index)) })
+    ] });
+  };
+  const SystemPrompt = ({ system }) => {
+    if (!system) return jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, {});
+    const [isOpen, setIsOpen] = reactExports.useState(true);
+    const systemContent = typeof system === "string" ? system : Array.isArray(system) ? system.map((item, _idx) => typeof item === "string" ? item : JSON.stringify(item)).join(" ") : JSON.stringify(system);
+    return jsxRuntimeExports.jsxs("details", { open: isOpen, className: "section", onChange: (e) => setIsOpen(e.target.open), children: [
+jsxRuntimeExports.jsx("summary", { className: "section-header", children: jsxRuntimeExports.jsx("span", { className: "section-title", children: "System Prompt" }) }),
+jsxRuntimeExports.jsx("div", { className: "section-content", children: jsxRuntimeExports.jsx("div", { className: "message-content", dangerouslySetInnerHTML: { __html: renderChoiceTextContent(systemContent) } }) })
+    ] });
+  };
+  const AnthropicRequestVisualizer = ({ obj }) => {
+    return jsxRuntimeExports.jsxs("div", { className: "container", children: [
+jsxRuntimeExports.jsxs("div", { className: "header", children: [
+jsxRuntimeExports.jsx("h1", { children: "Anthropic API Request" }),
+jsxRuntimeExports.jsx("p", {})
+      ] }),
+jsxRuntimeExports.jsx(BasicInfo, { obj }),
+      obj.messages && jsxRuntimeExports.jsx(Messages, { messages: obj.messages }),
+      obj.system && jsxRuntimeExports.jsx(SystemPrompt, { system: obj.system })
+    ] });
+  };
+  function isAnthropicRequest(parsedObj) {
+    return !!parsedObj && !!parsedObj["model"] && (!!parsedObj["messages"] || !!parsedObj["prompt"]);
+  }
+  class AnthropicRequestRenderer extends BaseRenderer {
+    name = "anthropic-request";
+    async render(uuid, action, viewerName = "Auto") {
+      const json = await this.fetchFlowData(uuid, action, viewerName);
+      if (!json.text) {
+        console.warn("request has no text field.");
+        return;
+      }
+      let parsedObj;
+      try {
+        parsedObj = this.parseJSON(json.text);
+      } catch (e) {
+        console.error(e);
+        return;
+      }
+      if (!isAnthropicRequest(parsedObj)) {
+        return;
+      }
+      await this.renderReactComponent(AnthropicRequestVisualizer, { obj: parsedObj });
+    }
+  }
+  const ContentBlock = ({ block, index }) => {
+    const [expanded, setExpanded] = reactExports.useState(true);
+    if (block.type === "text") {
+      return jsxRuntimeExports.jsxs("details", { open: expanded, className: "content-block", children: [
+jsxRuntimeExports.jsx("summary", { className: "content-header", children: jsxRuntimeExports.jsxs("span", { children: [
+          "Text Content #",
+          index + 1
+        ] }) }),
+jsxRuntimeExports.jsxs("div", { className: "content-body", children: [
+jsxRuntimeExports.jsx("div", { className: "prose", dangerouslySetInnerHTML: { __html: renderChoiceTextContent(block.text || "") } }),
+          block.citations && block.citations.length > 0 && jsxRuntimeExports.jsxs("div", { className: "citations-section", children: [
+jsxRuntimeExports.jsx("div", { className: "section-title", children: "Citations" }),
+            block.citations.map((citation, citationIndex) => jsxRuntimeExports.jsx("div", { className: "citation-item", children: jsxRuntimeExports.jsx("pre", { children: JSON.stringify(citation, null, 2) }) }, citationIndex))
+          ] })
+        ] })
+      ] });
+    } else if (block.type === "tool_use") {
+      return jsxRuntimeExports.jsxs("details", { open: expanded, className: "content-block", children: [
+jsxRuntimeExports.jsx("summary", { className: "content-header", children: jsxRuntimeExports.jsxs("span", { children: [
+          "Tool Use #",
+          index + 1
+        ] }) }),
+jsxRuntimeExports.jsx("div", { className: "content-body", children: jsxRuntimeExports.jsxs("div", { className: "tool-info", children: [
+jsxRuntimeExports.jsxs("div", { className: "info-item", children: [
+jsxRuntimeExports.jsx("div", { className: "info-label", children: "Tool ID" }),
+jsxRuntimeExports.jsx("div", { className: "info-value", children: block.id })
+          ] }),
+jsxRuntimeExports.jsxs("div", { className: "info-item", children: [
+jsxRuntimeExports.jsx("div", { className: "info-label", children: "Tool Name" }),
+jsxRuntimeExports.jsx("div", { className: "info-value", children: block.name })
+          ] }),
+jsxRuntimeExports.jsxs("div", { className: "info-item", children: [
+jsxRuntimeExports.jsx("div", { className: "info-label", children: "Tool Input" }),
+jsxRuntimeExports.jsx("div", { className: "info-value", children: jsxRuntimeExports.jsx("pre", { children: JSON.stringify(block.input, null, 2) }) })
+          ] })
+        ] }) })
+      ] });
+    } else if (block.type === "thinking") {
+      return jsxRuntimeExports.jsxs("details", { open: expanded, className: "content-block thinking-block", children: [
+jsxRuntimeExports.jsx("summary", { className: "content-header", children: jsxRuntimeExports.jsxs("span", { children: [
+          "Thinking #",
+          index + 1
+        ] }) }),
+jsxRuntimeExports.jsxs("div", { className: "content-body", children: [
+          block.thinking && jsxRuntimeExports.jsx("div", { className: "thinking-content", children: jsxRuntimeExports.jsx("div", { className: "prose", dangerouslySetInnerHTML: { __html: renderChoiceTextContent(block.thinking) } }) }),
+          block.signature && jsxRuntimeExports.jsxs("div", { className: "signature-section", children: [
+jsxRuntimeExports.jsx("div", { className: "section-title", children: "Signature" }),
+jsxRuntimeExports.jsx("div", { className: "signature-content", children: block.signature })
+          ] })
+        ] })
+      ] });
+    } else if (block.type === "redacted_thinking") {
+      return jsxRuntimeExports.jsxs("details", { open: expanded, className: "content-block redacted-thinking-block", children: [
+jsxRuntimeExports.jsx("summary", { className: "content-header", children: jsxRuntimeExports.jsxs("span", { children: [
+          "Redacted Thinking #",
+          index + 1
+        ] }) }),
+jsxRuntimeExports.jsx("div", { className: "content-body", children: jsxRuntimeExports.jsx("div", { className: "data-content", children: jsxRuntimeExports.jsx("pre", { children: block.data }) }) })
+      ] });
+    } else if (block.type === "server_tool_use") {
+      return jsxRuntimeExports.jsxs("details", { open: expanded, className: "content-block server-tool-block", children: [
+jsxRuntimeExports.jsx("summary", { className: "content-header", children: jsxRuntimeExports.jsxs("span", { children: [
+          "Server Tool Use #",
+          index + 1
+        ] }) }),
+jsxRuntimeExports.jsx("div", { className: "content-body", children: jsxRuntimeExports.jsxs("div", { className: "tool-info", children: [
+jsxRuntimeExports.jsxs("div", { className: "info-item", children: [
+jsxRuntimeExports.jsx("div", { className: "info-label", children: "Tool ID" }),
+jsxRuntimeExports.jsx("div", { className: "info-value", children: block.id })
+          ] }),
+jsxRuntimeExports.jsxs("div", { className: "info-item", children: [
+jsxRuntimeExports.jsx("div", { className: "info-label", children: "Tool Name" }),
+jsxRuntimeExports.jsx("div", { className: "info-value", children: block.name })
+          ] }),
+          block.input && jsxRuntimeExports.jsxs("div", { className: "info-item", children: [
+jsxRuntimeExports.jsx("div", { className: "info-label", children: "Tool Input" }),
+jsxRuntimeExports.jsx("div", { className: "info-value", children: jsxRuntimeExports.jsx("pre", { children: JSON.stringify(block.input, null, 2) }) })
+          ] })
+        ] }) })
+      ] });
+    } else {
+      return jsxRuntimeExports.jsxs("details", { open: expanded, className: "content-block", children: [
+jsxRuntimeExports.jsx("summary", { className: "content-header", children: jsxRuntimeExports.jsxs("span", { children: [
+          block.type || "Unknown Content",
+          " #",
+          index + 1
+        ] }) }),
+jsxRuntimeExports.jsx("div", { className: "content-body", children: jsxRuntimeExports.jsx("pre", { className: "json-content", children: JSON.stringify(block, null, 2) }) })
+      ] });
+    }
+  };
+  const ContentSection = ({ content }) => {
+    if (!content || content.length === 0) return null;
+    const [isOpen, setIsOpen] = reactExports.useState(true);
+    return jsxRuntimeExports.jsxs("details", { open: isOpen, className: "section", onChange: (e) => setIsOpen(e.target.open), children: [
+jsxRuntimeExports.jsx("summary", { className: "section-header", children: jsxRuntimeExports.jsx("span", { className: "section-title", children: "Content" }) }),
+jsxRuntimeExports.jsx("div", { className: "section-content", children: content.map((block, index) => jsxRuntimeExports.jsx(ContentBlock, { block, index }, index)) })
+    ] });
+  };
+  const AnthropicResponseVisualizer = ({ response }) => {
+    return jsxRuntimeExports.jsxs("div", { className: "container", children: [
+jsxRuntimeExports.jsxs("div", { className: "header", children: [
+jsxRuntimeExports.jsx("h1", { children: "Anthropic API Response" }),
+jsxRuntimeExports.jsx("p", {})
+      ] }),
+jsxRuntimeExports.jsxs("div", { className: "section", children: [
+jsxRuntimeExports.jsx("div", { className: "section-header", children: jsxRuntimeExports.jsx("span", { className: "section-title", children: "Response Info" }) }),
+jsxRuntimeExports.jsxs("div", { className: "section-content", children: [
+jsxRuntimeExports.jsxs("div", { className: "info-item", children: [
+jsxRuntimeExports.jsx("div", { className: "info-label", children: "ID" }),
+jsxRuntimeExports.jsx("div", { className: "info-value", children: response.id })
+          ] }),
+jsxRuntimeExports.jsxs("div", { className: "info-item", children: [
+jsxRuntimeExports.jsx("div", { className: "info-label", children: "Model" }),
+jsxRuntimeExports.jsx("div", { className: "info-value", children: response.model })
+          ] }),
+jsxRuntimeExports.jsxs("div", { className: "info-item", children: [
+jsxRuntimeExports.jsx("div", { className: "info-label", children: "Type" }),
+jsxRuntimeExports.jsx("div", { className: "info-value", children: response.type })
+          ] }),
+jsxRuntimeExports.jsxs("div", { className: "info-item", children: [
+jsxRuntimeExports.jsx("div", { className: "info-label", children: "Stop Reason" }),
+jsxRuntimeExports.jsx("div", { className: "info-value", children: response.stop_reason })
+          ] }),
+jsxRuntimeExports.jsxs("div", { className: "info-item", children: [
+jsxRuntimeExports.jsx("div", { className: "info-label", children: "Stop Sequence" }),
+jsxRuntimeExports.jsx("div", { className: "info-value", children: response.stop_sequence })
+          ] })
+        ] })
+      ] }),
+      response.content && jsxRuntimeExports.jsx(ContentSection, { content: response.content }),
+      response.usage && jsxRuntimeExports.jsxs("details", { open: true, className: "section", children: [
+jsxRuntimeExports.jsx("summary", { className: "section-header", children: jsxRuntimeExports.jsx("span", { className: "section-title", children: "Token Usage" }) }),
+jsxRuntimeExports.jsx("div", { className: "section-content", children: jsxRuntimeExports.jsxs("div", { className: "usage-grid", children: [
+jsxRuntimeExports.jsxs("div", { className: "usage-item", children: [
+jsxRuntimeExports.jsx("div", { className: "usage-label", children: "Input Tokens" }),
+jsxRuntimeExports.jsx("div", { className: "usage-value", children: response.usage.input_tokens })
+          ] }),
+jsxRuntimeExports.jsxs("div", { className: "usage-item", children: [
+jsxRuntimeExports.jsx("div", { className: "usage-label", children: "Output Tokens" }),
+jsxRuntimeExports.jsx("div", { className: "usage-value", children: response.usage.output_tokens })
+          ] }),
+          response.usage.cache_creation_input_tokens !== null && jsxRuntimeExports.jsxs("div", { className: "usage-item", children: [
+jsxRuntimeExports.jsx("div", { className: "usage-label", children: "Cache Creation Input Tokens" }),
+jsxRuntimeExports.jsx("div", { className: "usage-value", children: response.usage.cache_creation_input_tokens })
+          ] }),
+          response.usage.cache_read_input_tokens !== null && jsxRuntimeExports.jsxs("div", { className: "usage-item", children: [
+jsxRuntimeExports.jsx("div", { className: "usage-label", children: "Cache Read Input Tokens" }),
+jsxRuntimeExports.jsx("div", { className: "usage-value", children: response.usage.cache_read_input_tokens })
+          ] }),
+          response.usage.cache_creation !== null && jsxRuntimeExports.jsxs("div", { className: "usage-item", children: [
+jsxRuntimeExports.jsx("div", { className: "usage-label", children: "Cache Creation" }),
+jsxRuntimeExports.jsx("div", { className: "usage-value", children: typeof response.usage.cache_creation === "object" ? JSON.stringify(response.usage.cache_creation) : response.usage.cache_creation })
+          ] }),
+          response.usage.server_tool_use !== null && jsxRuntimeExports.jsxs("div", { className: "usage-item", children: [
+jsxRuntimeExports.jsx("div", { className: "usage-label", children: "Server Tool Use" }),
+jsxRuntimeExports.jsx("div", { className: "usage-value", children: typeof response.usage.server_tool_use === "object" ? JSON.stringify(response.usage.server_tool_use) : response.usage.server_tool_use })
+          ] }),
+          response.usage.service_tier !== null && jsxRuntimeExports.jsxs("div", { className: "usage-item", children: [
+jsxRuntimeExports.jsx("div", { className: "usage-label", children: "Service Tier" }),
+jsxRuntimeExports.jsx("div", { className: "usage-value", children: response.usage.service_tier })
+          ] })
+        ] }) })
+      ] })
+    ] });
+  };
+  function processAnthropicSSEEvents(events) {
+    if (!events.length) {
+      throw new Error("No events to process");
+    }
+    let current_snapshot = null;
+    for (const event of events) {
+      switch (event.type) {
+        case "message_start":
+          current_snapshot = {
+            id: event.message.id,
+            type: event.message.type,
+            role: event.message.role,
+            model: event.message.model,
+            content: [...event.message.content],
+stop_reason: event.message.stop_reason,
+            stop_sequence: event.message.stop_sequence,
+            usage: {
+              input_tokens: event.message.usage?.input_tokens ?? 0,
+              output_tokens: event.message.usage?.output_tokens ?? 0,
+              cache_creation_input_tokens: event.message.usage?.cache_creation_input_tokens ?? null,
+              cache_read_input_tokens: event.message.usage?.cache_read_input_tokens ?? null,
+              cache_creation: event.message.usage?.cache_creation ?? null,
+              server_tool_use: event.message.usage?.server_tool_use ?? null,
+              service_tier: event.message.usage?.service_tier ?? null
+            }
+          };
+          break;
+        case "content_block_start":
+          if (current_snapshot) {
+            let newContentBlock;
+            if (event.content_block.type === "text") {
+              newContentBlock = {
+                type: "text",
+                text: event.content_block.text || "",
+                citations: event.content_block.citations || []
+              };
+            } else {
+              newContentBlock = { ...event.content_block };
+            }
+            current_snapshot.content.push(newContentBlock);
+          }
+          break;
+        case "content_block_delta":
+          if (current_snapshot) {
+            const contentIndex = event.index;
+            if (contentIndex !== void 0 && contentIndex < current_snapshot.content.length) {
+              const contentBlock = current_snapshot.content[contentIndex];
+              if (event.delta.type === "text_delta") {
+                if (contentBlock.type === "text") {
+                  contentBlock.text = (contentBlock.text || "") + (event.delta.text || "");
+                }
+              } else if (event.delta.type === "input_json_delta") {
+                if (contentBlock.type === "tool_use" || contentBlock.type === "server_tool_use") {
+                  const accumulatedInput = contentBlock._partial_json || "";
+                  const newInput = accumulatedInput + (event.delta.partial_json || "");
+                  contentBlock._partial_json = newInput;
+                  try {
+                    contentBlock.input = JSON.parse(newInput);
+                  } catch (e) {
+                  }
+                }
+              } else if (event.delta.type === "citations_delta") {
+                if (contentBlock.type === "text") {
+                  if (!contentBlock.citations) {
+                    contentBlock.citations = [event.delta.citation];
+                  } else {
+                    contentBlock.citations.push(event.delta.citation);
+                  }
+                }
+              } else if (event.delta.type === "thinking_delta") {
+                if (contentBlock.type === "thinking") {
+                  contentBlock.thinking = (contentBlock.thinking || "") + (event.delta.thinking || "");
+                }
+              } else if (event.delta.type === "signature_delta") {
+                if (contentBlock.type === "thinking") {
+                  contentBlock.signature = event.delta.signature;
+                }
+              }
+            }
+          }
+          break;
+        case "message_delta":
+          if (current_snapshot) {
+            if (event.delta.stop_reason) {
+              current_snapshot.stop_reason = event.delta.stop_reason;
+            }
+            if (event.delta.stop_sequence) {
+              current_snapshot.stop_sequence = event.delta.stop_sequence;
+            }
+            if (event.usage) {
+              current_snapshot.usage = {
+                ...current_snapshot.usage,
+                input_tokens: event.usage.input_tokens ?? current_snapshot.usage.input_tokens,
+                output_tokens: event.usage.output_tokens ?? current_snapshot.usage.output_tokens,
+                cache_creation_input_tokens: event.usage.cache_creation_input_tokens ?? current_snapshot.usage.cache_creation_input_tokens,
+                cache_read_input_tokens: event.usage.cache_read_input_tokens ?? current_snapshot.usage.cache_read_input_tokens,
+                server_tool_use: event.usage.server_tool_use ?? current_snapshot.usage.server_tool_use
+              };
+            }
+          }
+          break;
+      }
+    }
+    if (current_snapshot) {
+      return current_snapshot;
+    }
+    return {
+      id: "N/A",
+      type: "message",
+      role: "assistant",
+      model: "N/A",
+      content: [],
+      stop_reason: null,
+      stop_sequence: null,
+      usage: {
+        input_tokens: 0,
+        output_tokens: 0,
+        cache_creation_input_tokens: null,
+        cache_read_input_tokens: null,
+        cache_creation: null,
+        server_tool_use: null,
+        service_tier: null
+      }
+    };
+  }
+  function isAnthropicResponse(parsedObj) {
+    return !!parsedObj && !!parsedObj["content"] && !!parsedObj["model"];
+  }
+  class AnthropicResponseRenderer extends BaseRenderer {
+    name = "anthropic-response";
+    async render(uuid, action, viewerName = "Auto") {
+      let json = await this.fetchFlowData(uuid, action, viewerName);
+      const response = await this.parseResponseForView(json);
+      if (response) {
+        await this.renderReactComponent(AnthropicResponseVisualizer, { response });
+      }
+    }
+    async parseResponseForView(json) {
+      console.log("Parsing Anthropic response for view:", json);
+      switch (json.view_name) {
+        case "JSON":
+          return await this.parseJsonResponse(json.text);
+        case "Raw":
+          return await this.parseSSEJsonResponse(json.text);
+        default:
+          return null;
+      }
+    }
+    async parseJsonResponse(text) {
+      try {
+        const parsedObj = this.parseJSON(text);
+        if (!isAnthropicResponse(parsedObj)) {
+          return null;
+        }
+        return parsedObj;
+      } catch (e) {
+        console.error("Error parsing JSON response:", e);
+        return null;
+      }
+    }
+    async parseSSEJsonResponse(text) {
+      try {
+        console.log("Parsing SSE response text:", text);
+        const events = [];
+        text.split("\n").forEach((line) => {
+          line = line.trim();
+          if (line.startsWith("data:")) {
+            const dataContent = line.slice(5).trim();
+            if (dataContent === "[DONE]" || dataContent === "data: [DONE]") return;
+            try {
+              const parsedData = this.parseJSON(dataContent);
+              events.push(parsedData);
+            } catch (parseError) {
+              console.error("Error parsing SSE event data:", dataContent, parseError);
+            }
+          } else if (line.startsWith("{") && line.endsWith("}")) {
+            try {
+              const parsedData = this.parseJSON(line);
+              if (parsedData && typeof parsedData.type === "string") {
+                events.push(parsedData);
+              }
+            } catch (parseError) {
+              console.error("Error parsing SSE event data:", line, parseError);
+            }
+          }
+        });
+        if (events.length > 0) {
+          return processAnthropicSSEEvents(events);
+        } else {
+          return null;
+        }
+      } catch (e) {
+        console.error("Error processing SSE response:", e);
+        return null;
+      }
+    }
+  }
+  const AnthropicProvider = {
+    name: "anthropic",
+    detector: new AnthropicDetector(),
+    requestRenderer: new AnthropicRequestRenderer(),
+    responseRenderer: new AnthropicResponseRenderer()
+  };
+  apiRegistry.register(OpenAIProvider);
+  apiRegistry.register(AnthropicProvider);
   const flowKV = new LRUCache(1024);
   const originalFetch = _unsafeWindow.fetch;
   const addStyles = () => {
@@ -13985,51 +14687,31 @@ details[open].llm-better-view summary {
     if (!flow) {
       return;
     }
-    if (isOpenaiFlow(flow)) {
-      if (action === "request") {
-        await renderOpenaiRequest(uuid, "json");
-      } else if (action === "response") {
-        let viewerName = "Auto";
-        const contentType = getContentType(flow);
-        if (contentType) {
-          if (contentType.includes("application/json")) {
-            viewerName = "json";
-          } else if (contentType.includes("text/event-stream")) {
-            viewerName = "raw";
-          }
+    const provider = apiRegistry.detectProvider(flow);
+    if (!provider) {
+      return;
+    }
+    if (action === "request") {
+      await provider.requestRenderer.render(uuid, action, "json");
+    } else if (action === "response") {
+      let viewerName = "Auto";
+      const contentType = getContentType(flow);
+      if (contentType) {
+        if (contentType.includes("application/json")) {
+          viewerName = "json";
+        } else if (contentType.includes("text/event-stream")) {
+          viewerName = "raw";
         }
-        await renderOpenaiResponse(uuid, viewerName);
+      }
+      if (viewerName === "raw" && provider.sseRenderer) {
+        await provider.sseRenderer.render(uuid, action, viewerName);
+      } else {
+        await provider.responseRenderer.render(uuid, action, viewerName);
       }
     }
   });
-  async function renderOpenaiRequest(uuid, viewerName = "Auto") {
-    const json = await getFlowData(`http://${window.location.host}/flows/${uuid}/request/content/${viewerName}.json`);
-    if (!json.text) {
-      console.warn("response has no text field.");
-    }
-    let parsedObj;
-    try {
-      parsedObj = JSON.parse(json.text);
-    } catch (e) {
-      console.error(e);
-    }
-    if (!isLLMRequest(parsedObj)) {
-      return;
-    }
-    const container = createReactContainer();
-    const root = clientExports.createRoot(container);
-    await new Promise((resolve) => {
-      root.render(
-jsxRuntimeExports.jsx(React.StrictMode, { children: jsxRuntimeExports.jsx(OpenAIRequestVisualizer, { obj: parsedObj }) })
-      );
-      setTimeout(() => {
-        resolve();
-      }, 0);
-    });
-    createDirectElement(container.innerHTML);
-  }
   function getContentType(flow) {
-    const headers = flow.response.headers;
+    const headers = flow.response?.headers;
     if (!headers) return null;
     for (const header of headers) {
       if (Array.isArray(header)) {
@@ -14050,76 +14732,6 @@ jsxRuntimeExports.jsx(React.StrictMode, { children: jsxRuntimeExports.jsx(OpenAI
       }
     }
     return null;
-  }
-  async function renderOpenaiResponse(uuid, viewerName = "Auto") {
-    let json = await getFlowData(`http://${window.location.host}/flows/${uuid}/response/content/${viewerName}.json`);
-    if (json.view_name === "JSON") {
-      try {
-        const parsedObj = JSON.parse(json.text);
-        if (!isLLMResponse(parsedObj)) {
-          return;
-        }
-        const container = createReactContainer();
-        const root = clientExports.createRoot(container);
-        await new Promise((resolve) => {
-          root.render(
-jsxRuntimeExports.jsx(React.StrictMode, { children: jsxRuntimeExports.jsx(OpenAIResponseVisualizer, { response: parsedObj }) })
-          );
-          setTimeout(() => {
-            resolve();
-          }, 0);
-        });
-        createDirectElement(container.innerHTML);
-      } catch (e) {
-        console.error("Error parsing JSON response:", e);
-      }
-    } else if (json.view_name === "Raw") {
-      const events = [];
-      json.text.split("\n").forEach((line) => {
-        line = line.trim();
-        if (line.startsWith("data:")) {
-          const dataContent = line.slice(5);
-          if (dataContent === "[DONE]") return;
-          try {
-            events.push(JSON.parse(dataContent));
-          } catch {
-          }
-        }
-      });
-      const input = processSSEEvents(events);
-      const container = createReactContainer();
-      const root = clientExports.createRoot(container);
-      await new Promise((resolve) => {
-        root.render(
-jsxRuntimeExports.jsx(React.StrictMode, { children: jsxRuntimeExports.jsx(
-            OpenAISSEResponseVisualizer,
-            {
-              model: input.model,
-              created: input.created,
-              system_fingerprint: input.system_fingerprint,
-              eventCount: input.eventCount,
-              usage: input.usage,
-              choices: input.choices
-            }
-          ) })
-        );
-        setTimeout(() => {
-          resolve();
-        }, 0);
-      });
-      createDirectElement(container.innerHTML);
-    }
-  }
-  function createReactContainer() {
-    const container = document.createElement("div");
-    container.style.width = "100%";
-    container.style.height = "100%";
-    return container;
-  }
-  async function getFlowData(dataUrl) {
-    const newResp = await originalFetch(new Request(dataUrl));
-    const newJson = await newResp.json();
-    return newJson;
   }
   function extractFlowInfo(url) {
     const regex = /#\/flows\/([0-9a-fA-F\-]{36})\/(request|response)/;
@@ -14153,9 +14765,6 @@ jsxRuntimeExports.jsx(React.StrictMode, { children: jsxRuntimeExports.jsx(
     };
     window.addEventListener("popstate", onUrlChange);
   }
-  function isOpenaiFlow(flow) {
-    return flow.request.path.endsWith("/completions");
-  }
   async function getFlow(uuid) {
     const cacheKey = `mitmproxy-flow-${uuid}`;
     let cachedFlow = flowKV.get(cacheKey);
@@ -14169,7 +14778,7 @@ jsxRuntimeExports.jsx(React.StrictMode, { children: jsxRuntimeExports.jsx(
     const flowArray = await response.json();
     let targetFlow = null;
     for (const flow of flowArray) {
-      if (isOpenaiFlow(flow)) {
+      if (apiRegistry.detectProvider(flow)) {
         flowKV.put(flow.id, omit(flow, ["client_conn", "server_conn"]));
       }
       if (flow.id === uuid) {
@@ -14180,46 +14789,6 @@ jsxRuntimeExports.jsx(React.StrictMode, { children: jsxRuntimeExports.jsx(
       flowKV.put(cacheKey, targetFlow);
     }
     return targetFlow;
-  }
-  function isLLMRequest(parsedObj) {
-    return !!parsedObj && (!!parsedObj["messages"] || !!parsedObj["prompt"]) && !!parsedObj["model"];
-  }
-  function isLLMResponse(parsedObj) {
-    return !!parsedObj && !!parsedObj["choices"] && !!parsedObj["model"];
-  }
-  async function createDirectElement(html) {
-    let container = document.getElementById("mitmproxy-llm-better-view-container");
-    if (!container) {
-      const contentview = document.querySelector(".contentview");
-      if (!contentview) {
-        console.warn("no `.contentview` element found");
-        return;
-      }
-      const secondChild = contentview.childNodes[1];
-      container = document.createElement("details");
-      container.toggleAttribute("open");
-      container.id = "mitmproxy-llm-better-view-container";
-      container.classList.add("llm-better-view");
-      contentview.insertBefore(container, secondChild);
-    }
-    let summaryElement = Array.from(container.children).find(
-      (el) => el.tagName.toLowerCase() === "summary"
-    );
-    if (!summaryElement) {
-      summaryElement = document.createElement("summary");
-      summaryElement.textContent = "LLM Better View";
-      container.prepend(summaryElement);
-    }
-    const childrenToKeep = Array.from(container.children).filter(
-      (el) => el.tagName.toLowerCase() === "summary"
-    );
-    container.innerHTML = "";
-    childrenToKeep.forEach((child) => container.appendChild(child));
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = html.trim();
-    while (tempDiv.firstChild) {
-      container.appendChild(tempDiv.firstChild);
-    }
   }
 
 })();

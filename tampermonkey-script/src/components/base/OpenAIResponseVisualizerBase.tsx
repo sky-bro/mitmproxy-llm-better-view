@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { renderChoiceTextContent, renderToolChoiceArgument } from '../utils/textRender';
+import { renderChoiceTextContent, renderToolChoiceArgument } from '../../utils/textRender';
 
 
 // Helper functions that are common between both responses

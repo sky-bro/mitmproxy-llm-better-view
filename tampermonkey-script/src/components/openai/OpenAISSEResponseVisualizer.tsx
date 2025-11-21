@@ -1,6 +1,6 @@
 import React from 'react';
-import { OpenAIAggregatedChoice } from '../types/api/openai';
-import { BaseOpenAIResponseVisualizer } from './OpenAIBaseResponseVisualizer';
+import { OpenAIAggregatedChoice } from '../../types/api/openai';
+import { BaseOpenAIResponseVisualizer } from '../base/OpenAIResponseVisualizerBase';
 
 // Define interfaces
 interface OpenAISSEResponseVisualizerProps {

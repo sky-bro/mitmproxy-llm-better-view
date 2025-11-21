@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { renderChoiceTextContent, renderToolMessage, isAnthropicContent } from '../utils/textRender';
+import { renderChoiceTextContent, renderToolMessage, isAnthropicContent } from '../../utils/textRender';
 import { ChatCompletionCreateParams } from 'openai/resources';
 
 // Define a type that can handle both Chat and Completion requests (as seen in MITM proxy logs)

@@ -1,6 +1,6 @@
 import React from 'react';
-import { OpenAIResponse } from '../types/api/openai';
-import { BaseOpenAIResponseVisualizer } from './OpenAIBaseResponseVisualizer';
+import { OpenAIResponse } from '../../types/api/openai';
+import { BaseOpenAIResponseVisualizer } from '../base/OpenAIResponseVisualizerBase';
 
 interface OpenAIResponseVisualizerProps {
   response: OpenAIResponse;
