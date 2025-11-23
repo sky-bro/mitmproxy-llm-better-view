@@ -13,6 +13,7 @@ export class AnthropicResponseRenderer extends BaseRenderer {
   async render(uuid: string, action: 'request' | 'response', viewerName: string = "Auto"): Promise<void> {
     let json = await this.fetchFlowData(uuid, action, viewerName);
     const response: AnthropicResponse | null = await this.parseResponseForView(json);
+    console.log("Anthropic response to render:", response);
 
     if (response) {
       await this.renderReactComponent(AnthropicResponseVisualizer, { response: response });

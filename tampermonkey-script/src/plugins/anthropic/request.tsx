@@ -29,6 +29,6 @@ export class AnthropicRequestRenderer extends BaseRenderer {
       return;
     }
 
-    await this.renderReactComponent(AnthropicRequestVisualizer, { obj: parsedObj });
+    await this.renderReactComponent(AnthropicRequestVisualizer, { request: parsedObj });
   }
 }

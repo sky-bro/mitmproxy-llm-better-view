@@ -1,7 +1,11 @@
 // Anthropic API request/response types
-import { MessageCreateParams, RawMessageStreamEvent, Message, ContentBlock } from "@anthropic-ai/sdk/resources";
+import { MessageCreateParams, RawMessageStreamEvent, Message, MessageParam, ContentBlock, TextBlockParam } from "@anthropic-ai/sdk/resources";
 
 export type AnthropicRequest = MessageCreateParams;
+
+export type AnthropicSystemMessageContent = string | Array<TextBlockParam>
+
+export type AnthropicMessage = MessageParam;
 
 export type AnthropicResponse = Message;
 

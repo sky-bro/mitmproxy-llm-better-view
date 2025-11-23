@@ -1,3 +1,7 @@
+import { OpenAI } from "openai/client.js";
+import { ChatCompletionCreateParamsBase } from "openai/resources/chat/completions.mjs";
+import { Response, ResponseStreamEvent } from "openai/resources/responses/responses.mjs";
+
 // Common OpenAI request/response types
 export interface OpenAIRequest {
   model: string;

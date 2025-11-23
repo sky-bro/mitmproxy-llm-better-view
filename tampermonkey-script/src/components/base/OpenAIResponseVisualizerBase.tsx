@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { renderChoiceTextContent, renderToolChoiceArgument } from '../../utils/textRender';
+import BasicInfo from '../common/BasicInfo';
+import InfoItem from '../common/InfoItem';
 
 
 // Helper functions that are common between both responses
@@ -13,26 +15,6 @@ export const getFinishReasonClass = (finishReason: string) => {
   return classMap[finishReason] || '';
 };
 
-// Helper component for basic info section - supports flexible data structure
-interface BaseInfoItemProps {
-  label: string;
-  value: any;
-  formatter?: (val: any) => string;
-}
-
-export const InfoItem: React.FC<BaseInfoItemProps> = ({ label, value, formatter }) => {
-  if (value === undefined || value === null) return null;
-
-  const displayValue = formatter ? formatter(value) : value;
-  return (
-    <div className="info-item">
-      <div className="info-label">{label}</div>
-      <div className="info-value">
-        {typeof displayValue === 'boolean' ? (displayValue ? 'true' : 'false') : displayValue}
-      </div>
-    </div>
-  );
-};
 
 export const UsageItem: React.FC<{ label: string; value: any }> = ({ label, value }) => {
   if (value === undefined || value === null) return null;
@@ -44,33 +26,6 @@ export const UsageItem: React.FC<{ label: string; value: any }> = ({ label, valu
   );
 };
 
-interface BaseInfoSectionProps {
-  obj: any;
-  eventCount?: number;
-}
-
-export const BasicInfoSection: React.FC<{ data: BaseInfoSectionProps }> = ({ data }) => {
-  const [isOpen, setIsOpen] = useState(true);
-
-  const { obj, eventCount } = data;
-  const createdDate = obj.created ? new Date(obj.created * 1000).toLocaleString('en-US') : undefined;
-
-  return (
-    <details open={isOpen} className="section" onChange={(e) => setIsOpen((e.target as HTMLDetailsElement).open)}>
-      <summary className="section-header">
-        <span className="section-title">Basic Info</span>
-      </summary>
-      <div className="section-content">
-        <InfoItem label="Response ID" value={obj.id} />
-        <InfoItem label="Model" value={obj.model} />
-        <InfoItem label="Object Type" value={obj.object} />
-        <InfoItem label="Created" value={createdDate} />
-        <InfoItem label="System Fingerprint" value={obj.system_fingerprint} />
-        {eventCount !== undefined && <InfoItem label="Events Count" value={eventCount || 0} />}
-      </div>
-    </details>
-  );
-};
 
 export const TokenUsageSection: React.FC<{ usage: any }> = ({ usage }) => {
   if (!usage) return null;
@@ -341,7 +296,14 @@ export const BaseOpenAIResponseVisualizer: React.FC<BaseResponseVisualizerProps>
           <div className="event-badge">{eventCount} events</div>
         )}
       </div>
-      <BasicInfoSection data={{ obj: response, eventCount }} />
+      <BasicInfo>
+        <InfoItem label="Response ID" value={response.id} />
+        <InfoItem label="Model" value={response.model} />
+        <InfoItem label="Object Type" value={response.object} />
+        <InfoItem label="Created" value={response.created ? new Date(response.created * 1000).toLocaleString('en-US') : undefined} />
+        <InfoItem label="System Fingerprint" value={response.system_fingerprint} />
+        {eventCount !== undefined && <InfoItem label="Events Count" value={eventCount || 0} />}
+      </BasicInfo>
       {response.usage && <TokenUsageSection usage={response.usage} />}
       <ChoicesSection choices={response.choices} eventCount={eventCount} />
     </div>

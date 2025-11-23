@@ -1,7 +1,5 @@
 // Main components that can be used directly or for integration with the plugin system
-export { default as BaseOpenAIResponseVisualizer } from './base/OpenAIResponseVisualizerBase';
-export { InfoItem, UsageItem, BasicInfoSection, TokenUsageSection } from './base/OpenAIResponseVisualizerBase';
-export { default as BaseInfoSectionOld } from './base/BaseInfo';
+export { UsageItem, TokenUsageSection } from './base/OpenAIResponseVisualizerBase';
 
 export {
   // OpenAI exports

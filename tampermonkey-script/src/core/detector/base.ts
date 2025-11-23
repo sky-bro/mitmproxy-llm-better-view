@@ -16,7 +16,10 @@ export abstract class BaseDetector implements APIDetector {
    * @param patterns Array of path patterns to match
    */
   protected matchesPath(flow: Flow, patterns: string[]): boolean {
-    const path = flow.request.path.toLowerCase();
+    const path = flow.request?.path?.toLowerCase();
+    if (!path) {
+      return false;
+    }
     return patterns.some(pattern => path.includes(pattern));
   }
 

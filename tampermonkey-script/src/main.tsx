@@ -43,6 +43,7 @@ addStyles();
  */
 listenUrlChange(async ({ uuid, action }) => {
   const flow = await getFlow(uuid);
+  console.log("Detected flow for rendering:", flow);
   if (!flow) {
     return;
   }
