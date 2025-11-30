@@ -3,6 +3,8 @@ import { renderChoiceTextContent } from '../../utils/textRender';
 import { Message, ContentBlock as AnthropicContentBlock } from "@anthropic-ai/sdk/resources";
 import InfoItem from '../common/InfoItem';
 import UsageItem from '../common/UsageItem';
+import ToolCall from '../common/ToolCall';
+import ProseContent from '../common/ProseContent';
 
 // Import the correct Anthropic response type
 export type AnthropicResponse = Message;
@@ -17,7 +19,7 @@ const TextContentBlock: React.FC<{ block: Extract<AnthropicContentBlock, {type: 
         <span>Text Content #{index + 1}</span>
       </summary>
       <div className="content-body">
-        <div className="prose" dangerouslySetInnerHTML={{ __html: renderChoiceTextContent(block.text || '') }} />
+        <ProseContent contentStr={block.text || ''} />
         {block.citations && block.citations.length > 0 && (
           <div className="citations-section">
             <div className="section-title">Citations</div>
@@ -35,39 +37,16 @@ const TextContentBlock: React.FC<{ block: Extract<AnthropicContentBlock, {type: 
 
 // Component to render tool use content block
 const ToolUseContentBlock: React.FC<{ block: Extract<AnthropicContentBlock, {type: 'tool_use' | 'server_tool_use'}>, index: number }> = ({ block, index }) => {
-  const [expanded, setExpanded] = useState(true);
   const isServerToolUse = block.type === 'server_tool_use';
 
   return (
-    <details
-      open={expanded}
-      className={`content-block ${isServerToolUse ? 'server-tool-block' : ''}`}
-      onChange={(e) => setExpanded((e.target as HTMLDetailsElement).open)}
-    >
-      <summary className="content-header">
-        <span>{isServerToolUse ? 'Server Tool Use' : 'Tool Use'} #{index + 1}</span>
-      </summary>
-      <div className="content-body">
-        <div className="tool-info">
-          <div className="info-item">
-            <div className="info-label">Tool ID</div>
-            <div className="info-value">{block.id}</div>
-          </div>
-          <div className="info-item">
-            <div className="info-label">Tool Name</div>
-            <div className="info-value">{block.name}</div>
-          </div>
-          { (block as any).input && (
-            <div className="info-item">
-              <div className="info-label">Tool Input</div>
-              <div className="info-value">
-                <pre>{JSON.stringify(block.input, null, 2)}</pre>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </details>
+    <ToolCall
+      callId={block.id || 'N/A'}
+      toolName={block.name || 'unnamed'}
+      toolType={isServerToolUse ? 'server_tool_use' : 'tool_use'}
+      argumentsStr={JSON.stringify((block as any).input || {})}
+      index={index}
+    />
   );
 };
 
@@ -83,7 +62,7 @@ const ThinkingContentBlock: React.FC<{ block: Extract<AnthropicContentBlock, {ty
       <div className="content-body">
         {block.thinking && (
           <div className="thinking-content">
-            <div className="prose" dangerouslySetInnerHTML={{ __html: renderChoiceTextContent(block.thinking) }} />
+            <ProseContent contentStr={block.thinking} />
           </div>
         )}
         {block.signature && (

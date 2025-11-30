@@ -1,11 +1,10 @@
 // Main components that can be used directly or for integration with the plugin system
-export { UsageItem, TokenUsageSection } from './base/OpenAIResponseVisualizerBase';
+export { UsageItem, TokenUsageSection } from './openai/OpenAIResponseVisualizer';
 
 export {
   // OpenAI exports
   OpenAIRequestVisualizer,
-  OpenAIResponseVisualizer,
-  OpenAISSEResponseVisualizer
+  OpenAIResponseVisualizer
 } from './openai';
 
 export {

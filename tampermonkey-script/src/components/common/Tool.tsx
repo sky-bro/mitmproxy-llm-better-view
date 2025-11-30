@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
+import Section from './Section'
 import { renderChoiceTextContent } from '../../utils/textRender';
+import JsonContent from './JsonContent';
+import ProseContent from './ProseContent';
 
 export interface ToolDefinition {
   name?: string;
@@ -35,12 +38,11 @@ const ToolContent: React.FC<{ tool: ToolDefinition }> = ({ tool }) => {
   return (
     <>
       {tool.description && (
-        <div
-          className="tool-description prose"
-          dangerouslySetInnerHTML={{ __html: renderChoiceTextContent(tool.description) }}
-        />
+        <div className="tool-description prose">
+          <ProseContent contentStr={tool.description} />
+        </div>
       )}
-      {tool.input_schema?.properties && (
+      {tool.input_schema?.properties ? (
         <div className="tool-parameters">
           <div className="tool-parameters-title">parameters:</div>
           {Object.entries(
@@ -54,7 +56,7 @@ const ToolContent: React.FC<{ tool: ToolDefinition }> = ({ tool }) => {
             />
           ))}
         </div>
-      )}
+      ) : <JsonContent jsonObj={tool.input_schema} />}
     </>
   );
 };
@@ -86,6 +88,7 @@ export const Tool: React.FC<SharedToolProps> = ({ tool, index, isOpenByDefault =
 
 interface ToolsProps {
   title?: string;
+  count?: number; // Number of tools to display in the title
   defaultOpen?: boolean; // Whether the collection should be open by default
   children?: React.ReactNode;
 }
@@ -93,25 +96,16 @@ interface ToolsProps {
 // Collection component to render multiple tools
 export const Tools: React.FC<ToolsProps> = ({
   title = "Tools",
+  count,
   defaultOpen = false,
   children
 }) => {
-  if (!children) return null;
+  // If count is provided, include it in the title
+  const displayTitle = count !== undefined ? `${title} (${count})` : title;
 
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  return (
-    <details open={isOpen} className="section" onChange={(e) => setIsOpen((e.target as HTMLDetailsElement).open)}>
-      <summary className="section-header">
-        <span className="section-title">
-          {title}
-        </span>
-      </summary>
-      <div className="section-content">
-        {children}
-      </div>
-    </details>
-  );
+  return <Section title={displayTitle} defaultOpen={defaultOpen} >
+    {children}
+  </Section>
 };
 
 export default Tools;

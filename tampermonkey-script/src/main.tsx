@@ -68,12 +68,7 @@ listenUrlChange(async ({ uuid, action }) => {
       }
     }
 
-    // Use SSE renderer for streaming responses if available
-    if (viewerName === "raw" && provider.sseRenderer) {
-      await provider.sseRenderer.render(uuid, action, viewerName);
-    } else {
-      await provider.responseRenderer.render(uuid, action, viewerName);
-    }
+    await provider.responseRenderer.render(uuid, action, viewerName);
   }
 });
 

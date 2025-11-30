@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import Section from './Section'
 
 // Component for basic info section with flexible children content
 interface BasicInfoProps {
@@ -7,18 +8,9 @@ interface BasicInfoProps {
 }
 
 const BasicInfo: React.FC<BasicInfoProps> = ({ title = 'Basic Info', children }) => {
-  const [isOpen, setIsOpen] = useState(true);
-
-  return (
-    <details open={isOpen} className="section" onChange={(e) => setIsOpen((e.target as HTMLDetailsElement).open)}>
-      <summary className="section-header">
-        <span className="section-title">{title}</span>
-      </summary>
-      <div className="section-content">
-        {children}
-      </div>
-    </details>
-  );
+  return <Section title={title} defaultOpen={true}>
+    {children}
+  </Section>
 };
 
 export default BasicInfo;

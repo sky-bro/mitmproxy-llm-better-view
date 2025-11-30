@@ -319,6 +319,38 @@ details[open].llm-better-view summary {
   color: #7c3aed;
 }
 
+.llm-better-view .role-developer {
+  background: #f0f9ff;
+  color: #0284c7;
+}
+
+.llm-better-view .role-function {
+  background: #fbf7ed;
+  color: #c2410c;
+}
+
+/* Role-specific content styling */
+.llm-better-view .system-message {
+  background: #fefce8; /* Light yellow background */
+  border-left: 3px solid #ca8a04; /* Distinct yellow accent */
+  padding: 8px 12px;
+  border-radius: 0 4px 4px 0;
+}
+
+.llm-better-view .tool-message {
+  background: #faf5ff; /* Light purple background */
+  border-left: 3px solid #7c3aed; /* Purple accent */
+  padding: 8px 12px;
+  border-radius: 0 4px 4px 0;
+}
+
+.llm-better-view .developer-message {
+  background: #eff6ff; /* Light blue background */
+  border-left: 3px solid #2563eb; /* Blue accent */
+  padding: 8px 12px;
+  border-radius: 0 4px 4px 0;
+}
+
 .llm-better-view .tool-name-badge {
   padding: 4px 10px;
   border-radius: 6px;
@@ -347,8 +379,6 @@ details[open].llm-better-view summary {
 
 .llm-better-view .json-content {
   font-family: "Monaco", "Menlo", monospace;
-  background: #1f2937;
-  color: #f9fafb;
   padding: 16px;
   border-radius: 6px;
   font-size: 1.2rem;

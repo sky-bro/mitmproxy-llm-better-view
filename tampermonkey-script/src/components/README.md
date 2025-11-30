@@ -1,19 +1,27 @@
 # Components
 
-This directory contains React visualizer components organized by API provider with shared base components.
+This directory contains React visualizer components organized by API provider with shared common components.
 
 ## Structure
 
 ```
 components/
 ├── common/                 # Shared components that are used across all APIs
-├── base/                   # Base visualizer components that can be extended
-│   ├── OpenAIResponseVisualizerBase.tsx # Base for OpenAI response rendering
-│   └── BaseInfo.tsx        # General purpose info display components
+│   ├── BasicInfo.tsx       # General purpose info display component
+│   ├── InfoItem.tsx        # Individual info item component
+│   ├── JsonContent.tsx     # JSON content display component
+│   ├── Message.tsx         # Message display component
+│   ├── MessageContentBlock.tsx  # Message content block component
+│   ├── Messages.tsx        # Messages container component
+│   ├── ProseContent.tsx    # Prose content display component
+│   ├── Section.tsx         # Section wrapper component
+│   ├── Tool.tsx            # Tool display component
+│   ├── ToolCall.tsx        # Tool call display component
+│   ├── ToolResult.tsx      # Tool result display component
+│   └── UsageItem.tsx       # Usage item display component
 ├── openai/                 # OpenAI-specific visualizers
 │   ├── OpenAIRequestVisualizer.tsx
 │   ├── OpenAIResponseVisualizer.tsx
-│   ├── OpenAISSEResponseVisualizer.tsx
 │   └── index.ts            # Export for OpenAI visualizers
 ├── anthropic/              # Anthropic-specific visualizers
 │   ├── AnthropicRequestVisualizer.tsx

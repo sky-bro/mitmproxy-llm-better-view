@@ -372,6 +372,38 @@ details[open].llm-better-view summary {
   color: #7c3aed;
 }
 
+.llm-better-view .role-developer {
+  background: #f0f9ff;
+  color: #0284c7;
+}
+
+.llm-better-view .role-function {
+  background: #fbf7ed;
+  color: #c2410c;
+}
+
+/* Role-specific content styling */
+.llm-better-view .system-message {
+  background: #fefce8; /* Light yellow background */
+  border-left: 3px solid #ca8a04; /* Distinct yellow accent */
+  padding: 8px 12px;
+  border-radius: 0 4px 4px 0;
+}
+
+.llm-better-view .tool-message {
+  background: #faf5ff; /* Light purple background */
+  border-left: 3px solid #7c3aed; /* Purple accent */
+  padding: 8px 12px;
+  border-radius: 0 4px 4px 0;
+}
+
+.llm-better-view .developer-message {
+  background: #eff6ff; /* Light blue background */
+  border-left: 3px solid #2563eb; /* Blue accent */
+  padding: 8px 12px;
+  border-radius: 0 4px 4px 0;
+}
+
 .llm-better-view .tool-name-badge {
   padding: 4px 10px;
   border-radius: 6px;
@@ -400,8 +432,6 @@ details[open].llm-better-view summary {
 
 .llm-better-view .json-content {
   font-family: "Monaco", "Menlo", monospace;
-  background: #1f2937;
-  color: #f9fafb;
   padding: 16px;
   border-radius: 6px;
   font-size: 1.2rem;
@@ -13581,43 +13611,20 @@ parseJSON(content) {
       }
     }
   }
-  function formatTextWithLineBreaks(content) {
-    if (!content) return "";
-    return `<pre class="text-content" style="white-space: pre-wrap; margin: 0;">${content.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`;
-  }
-  function renderChoiceTextContent(content) {
-    return formatTextWithLineBreaks(content);
-  }
-  function renderToolMessage(content) {
-    if (typeof content === "string") {
-      return formatTextWithLineBreaks(content);
-    } else if (Array.isArray(content)) {
-      return content.map((item) => {
-        if (typeof item === "string") {
-          return formatTextWithLineBreaks(item);
-        } else if (item.type === "text") {
-          return formatTextWithLineBreaks(item.text || "");
-        } else {
-          return JSON.stringify(item, null, 2);
-        }
-      }).join("<br>");
-    } else {
-      return JSON.stringify(content, null, 2);
-    }
-  }
-  function renderToolChoiceArgument(args) {
-    if (typeof args === "object" && args !== null) {
-      return `<pre style="white-space: pre; font-family: monospace;">${JSON.stringify(args, null, 2)}</pre>`;
-    }
-    const argString = String(args);
-    return formatTextWithLineBreaks(argString);
-  }
-  const BasicInfo = ({ title = "Basic Info", children }) => {
-    const [isOpen, setIsOpen] = reactExports.useState(true);
+  const Section = ({
+    title = "Section",
+    defaultOpen = false,
+    children
+  }) => {
+    if (!children) return null;
+    const [isOpen, setIsOpen] = reactExports.useState(defaultOpen);
     return jsxRuntimeExports.jsxs("details", { open: isOpen, className: "section", onChange: (e) => setIsOpen(e.target.open), children: [
 jsxRuntimeExports.jsx("summary", { className: "section-header", children: jsxRuntimeExports.jsx("span", { className: "section-title", children: title }) }),
 jsxRuntimeExports.jsx("div", { className: "section-content", children })
     ] });
+  };
+  const BasicInfo = ({ title = "Basic Info", children }) => {
+    return jsxRuntimeExports.jsx(Section, { title, defaultOpen: true, children });
   };
   const InfoItem = ({ label, value, formatter }) => {
     if (value === void 0 || value === null) return null;
@@ -13626,6 +13633,32 @@ jsxRuntimeExports.jsx("div", { className: "section-content", children })
 jsxRuntimeExports.jsx("div", { className: "info-label", children: label }),
 jsxRuntimeExports.jsx("div", { className: "info-value", children: typeof displayValue === "boolean" ? displayValue ? "true" : "false" : displayValue })
     ] });
+  };
+  const MessageContentBlock = ({ title, children, defaultOpen = false, index = 0 }) => {
+    const [expanded, setExpanded] = reactExports.useState(defaultOpen);
+    return jsxRuntimeExports.jsxs("details", { className: "content-block-item", open: expanded, onChange: (e) => setExpanded(e.target.open), children: [
+jsxRuntimeExports.jsx("summary", { className: "content-block-header", children: jsxRuntimeExports.jsx("span", { className: "content-type-badge", children: title }) }),
+jsxRuntimeExports.jsx("div", { className: "content-block-content", children })
+    ] }, index);
+  };
+  function formatTextWithLineBreaks(content) {
+    if (!content) return "";
+    return `<pre class="text-content" style="white-space: pre-wrap; margin: 0;">${content.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`;
+  }
+  const JsonContent = ({
+    jsonObj
+  }) => {
+    if (!jsonObj) return null;
+    if (typeof jsonObj === "object") {
+      return jsxRuntimeExports.jsx("pre", { className: "json-content", children: JSON.stringify(jsonObj, null, 2) });
+    }
+    return formatTextWithLineBreaks(String(jsonObj));
+  };
+  const ProseContent = ({
+    contentStr
+  }) => {
+    if (!contentStr) return null;
+    return jsxRuntimeExports.jsx("div", { className: "prose", "data-format": "string", children: jsxRuntimeExports.jsx("pre", { className: "text-content", style: { whiteSpace: "pre-wrap", margin: 0 }, children: contentStr }) });
   };
   const ParameterItem = ({ name, param, required }) => {
     const isRequired = required.includes(name);
@@ -13640,14 +13673,8 @@ jsxRuntimeExports.jsx("span", { className: "parameter-name", children: name }),
   };
   const ToolContent = ({ tool }) => {
     return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-      tool.description && jsxRuntimeExports.jsx(
-        "div",
-        {
-          className: "tool-description prose",
-          dangerouslySetInnerHTML: { __html: renderChoiceTextContent(tool.description) }
-        }
-      ),
-      tool.input_schema?.properties && jsxRuntimeExports.jsxs("div", { className: "tool-parameters", children: [
+      tool.description && jsxRuntimeExports.jsx("div", { className: "tool-description prose", children: jsxRuntimeExports.jsx(ProseContent, { contentStr: tool.description }) }),
+      tool.input_schema?.properties ? jsxRuntimeExports.jsxs("div", { className: "tool-parameters", children: [
 jsxRuntimeExports.jsx("div", { className: "tool-parameters-title", children: "parameters:" }),
         Object.entries(
           tool.input_schema.properties
@@ -13660,7 +13687,7 @@ jsxRuntimeExports.jsx("div", { className: "tool-parameters-title", children: "pa
           },
           name
         ))
-      ] })
+      ] }) : jsxRuntimeExports.jsx(JsonContent, { jsonObj: tool.input_schema })
     ] });
   };
   const Tool = ({ tool, index, isOpenByDefault = false }) => {
@@ -13678,63 +13705,159 @@ jsxRuntimeExports.jsx("div", { className: "tool-content", children: jsxRuntimeEx
   };
   const Tools = ({
     title = "Tools",
+    count,
     defaultOpen = false,
     children
   }) => {
-    if (!children) return null;
-    const [isOpen, setIsOpen] = reactExports.useState(defaultOpen);
-    return jsxRuntimeExports.jsxs("details", { open: isOpen, className: "section", onChange: (e) => setIsOpen(e.target.open), children: [
-jsxRuntimeExports.jsx("summary", { className: "section-header", children: jsxRuntimeExports.jsx("span", { className: "section-title", children: title }) }),
-jsxRuntimeExports.jsx("div", { className: "section-content", children })
-    ] });
+    const displayTitle = count !== void 0 ? `${title} (${count})` : title;
+    return jsxRuntimeExports.jsx(Section, { title: displayTitle, defaultOpen, children });
   };
-  const MessageContent$1 = ({ message }) => {
-    console.log("Rendering message content:", message);
-    if (message.role === "tool") {
-      return jsxRuntimeExports.jsx("div", { className: "prose", "data-type": "tool", dangerouslySetInnerHTML: { __html: renderToolMessage(message.content) } });
-    } else if (typeof message.content === "string") {
-      return jsxRuntimeExports.jsx("div", { className: "prose", "data-format": "string", dangerouslySetInnerHTML: { __html: renderChoiceTextContent(message.content) } });
-    } else if (Array.isArray(message.content)) {
-      return jsxRuntimeExports.jsx("div", { "data-format": "array", children: message.content.map((item, idx) => jsxRuntimeExports.jsx(MessageContent$1, { message: item }, idx)) });
-    } else {
-      return jsxRuntimeExports.jsx("div", { className: "json-content", "data-format": "object", children: JSON.stringify(message.content, null, 2) });
+  const Messages = ({
+    title = "Messages",
+    count,
+    defaultOpen = true,
+    children
+  }) => {
+    const displayTitle = count !== void 0 ? `${title} (${count})` : title;
+    return jsxRuntimeExports.jsx(Section, { title: displayTitle, defaultOpen, children });
+  };
+  const Message = ({
+    children,
+    role = "user",
+    name = "",
+    index,
+    open = false
+  }) => {
+    const roleClass = `role-${role || "unknown"}`;
+    return jsxRuntimeExports.jsx(Section, { defaultOpen: open, title: jsxRuntimeExports.jsxs("div", { className: "flex-container", children: [
+jsxRuntimeExports.jsxs("span", { className: `role-badge ${roleClass}`, children: [
+        role || "unknown",
+        name && `: ${name}`
+      ] }),
+jsxRuntimeExports.jsxs("span", { className: "text-small", children: [
+        "#",
+        index + 1
+      ] })
+    ] }), children });
+  };
+  const ToolCall = ({
+    callId,
+    toolName,
+    toolType = "function",
+    argumentsStr = "{}",
+    index
+  }) => {
+    let parsedArguments = {};
+    try {
+      parsedArguments = JSON.parse(argumentsStr);
+    } catch {
+      parsedArguments = argumentsStr;
+    }
+    const title = jsxRuntimeExports.jsxs("div", { children: [
+jsxRuntimeExports.jsx("div", { className: "tool-call-name", children: `${toolType}: ${toolName} #${index + 1}` }),
+jsxRuntimeExports.jsxs("div", { className: "tool-call-id", children: [
+        "ID: ",
+        callId || "N/A"
+      ] })
+    ] });
+    return jsxRuntimeExports.jsx(Section, { title, defaultOpen: true, children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: parsedArguments }) });
+  };
+  const ToolResult = ({
+    title,
+    toolUseId,
+    children
+  }) => {
+    const titleEle = jsxRuntimeExports.jsxs("div", { children: [
+      title && jsxRuntimeExports.jsx("div", { className: "tool-call-name", children: title }),
+jsxRuntimeExports.jsxs("div", { className: "tool-call-id", children: [
+        "ID: ",
+        toolUseId || "N/A"
+      ] })
+    ] });
+    return jsxRuntimeExports.jsx(Section, { title: titleEle, defaultOpen: true, children });
+  };
+  const MessageContent$1 = ({ content }) => {
+    if (!content) {
+      return null;
+    }
+    if (typeof content === "string") {
+      return jsxRuntimeExports.jsx(ProseContent, { contentStr: content });
+    } else if (Array.isArray(content)) {
+      return content.map((item, idx) => {
+        return jsxRuntimeExports.jsx(MessageContentBlock, { title: item.type, defaultOpen: idx === content.length - 1, children: jsxRuntimeExports.jsx(ContentPartRenderer, { item }) }, idx);
+      });
     }
   };
-  const Message$1 = ({ message, index, isLast }) => {
-    const [isOpen, setIsOpen] = reactExports.useState(isLast ? true : false);
-    const roleClass = `role-${message.role}`;
-    return jsxRuntimeExports.jsxs("details", { open: isOpen, className: "message-item", onChange: (e) => setIsOpen(e.target.open), children: [
-jsxRuntimeExports.jsx("summary", { className: "message-header", children: jsxRuntimeExports.jsxs("div", { className: "flex-container", children: [
-jsxRuntimeExports.jsx("span", { className: `role-badge ${roleClass}`, children: message.role }),
-jsxRuntimeExports.jsxs("span", { className: "text-small", children: [
-          "#",
-          index + 1
-        ] })
-      ] }) }),
-jsxRuntimeExports.jsx("div", { className: "message-content", children: jsxRuntimeExports.jsx(MessageContent$1, { message }) })
-    ] });
+  const ToolCalls$1 = ({ toolCalls }) => {
+    if (!toolCalls || !toolCalls.length) {
+      return null;
+    }
+    return jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: toolCalls.map((toolCall, idx) => {
+      const toolCallId = toolCall.id || "N/A";
+      const toolType = toolCall.type || "function";
+      const toolName = toolCall.type === "custom" ? toolCall.custom.name : toolCall.function.name;
+      const argumentsStr = toolCall.type === "custom" ? toolCall.custom.input : toolCall.function.arguments;
+      return jsxRuntimeExports.jsx(
+        ToolCall,
+        {
+          callId: toolCallId,
+          toolName,
+          toolType,
+          argumentsStr,
+          index: idx
+        },
+        idx
+      );
+    }) });
   };
-  const Messages$1 = ({ messages = [] }) => {
-    const [isOpen, setIsOpen] = reactExports.useState(true);
-    return jsxRuntimeExports.jsxs("details", { open: isOpen, className: "section", onChange: (e) => setIsOpen(e.target.open), children: [
-jsxRuntimeExports.jsx("summary", { className: "section-header", children: jsxRuntimeExports.jsxs("span", { className: "section-title", children: [
-        "Messages",
-        messages.length ? jsxRuntimeExports.jsxs("span", { children: [
-          "(",
-          messages.length,
-          ")"
-        ] }) : ""
-      ] }) }),
-jsxRuntimeExports.jsx("div", { className: "section-content", children: !messages.length ? jsxRuntimeExports.jsx("div", { className: "empty-state", children: "no messages" }) : messages.map((message, index) => jsxRuntimeExports.jsx(Message$1, { message, index, isLast: index === messages.length - 1 }, index)) })
-    ] });
+  const RoleMessage = ({ message }) => {
+    switch (message.role) {
+      case "assistant":
+        return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+jsxRuntimeExports.jsx(Section, { title: "content", defaultOpen: false, children: message.content && jsxRuntimeExports.jsx(MessageContent$1, { content: message.content }) }),
+jsxRuntimeExports.jsx(Section, { title: "audio", defaultOpen: false, children: message.audio && jsxRuntimeExports.jsx(JsonContent, { jsonObj: message.audio }) }),
+jsxRuntimeExports.jsx(Section, { title: `tool calls (${message.tool_calls?.length})`, defaultOpen: true, children: message.tool_calls && jsxRuntimeExports.jsx(ToolCalls$1, { toolCalls: message.tool_calls }) }),
+jsxRuntimeExports.jsx(Section, { title: `function call (deprecated): ${message.function_call?.name}`, defaultOpen: false, children: message.function_call && jsxRuntimeExports.jsx(ProseContent, { contentStr: message.function_call?.arguments }) }),
+jsxRuntimeExports.jsx(Section, { title: "refusal", defaultOpen: true, children: message.refusal && jsxRuntimeExports.jsx(ProseContent, { contentStr: message.refusal }) })
+        ] });
+      case "tool":
+        return jsxRuntimeExports.jsx(ToolResult, { toolUseId: message.tool_call_id, children: jsxRuntimeExports.jsx(MessageContent$1, { content: message.content }) });
+      case "function":
+      case "system":
+      case "user":
+      case "developer":
+        return jsxRuntimeExports.jsx(MessageContent$1, { content: message.content });
+    }
   };
-  const Prompt = ({ prompt }) => {
-    if (!prompt) return jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, {});
-    const [isOpen, setIsOpen] = reactExports.useState(true);
-    return jsxRuntimeExports.jsxs("details", { open: isOpen, className: "section", onChange: (e) => setIsOpen(e.target.open), children: [
-jsxRuntimeExports.jsx("summary", { className: "section-header", children: jsxRuntimeExports.jsx("span", { className: "section-title", children: "Prompt" }) }),
-jsxRuntimeExports.jsx("div", { className: "section-content", children: jsxRuntimeExports.jsx("div", { className: "message-content", dangerouslySetInnerHTML: { __html: renderChoiceTextContent(prompt) } }) })
-    ] });
+  const ContentPartRenderer = ({ item }) => {
+    switch (item.type) {
+      case "text":
+        return jsxRuntimeExports.jsx(ProseContent, { contentStr: item.text });
+      case "image_url":
+        return jsxRuntimeExports.jsxs("div", { className: "image-content", children: [
+jsxRuntimeExports.jsx("img", { src: item.image_url?.url, alt: "Content image", style: { maxWidth: "100%", height: "auto" } }),
+          item.image_url?.detail && jsxRuntimeExports.jsxs("small", { children: [
+            "Detail: ",
+            item.image_url.detail
+          ] })
+        ] });
+      case "input_audio":
+        return jsxRuntimeExports.jsxs("div", { className: "audio-content", children: [
+jsxRuntimeExports.jsx("audio", { controls: true, src: item.input_audio?.data }),
+          item.input_audio?.format && jsxRuntimeExports.jsxs("small", { children: [
+            "Format: ",
+            item.input_audio.format
+          ] })
+        ] });
+      case "refusal":
+        return jsxRuntimeExports.jsxs("div", { className: "refusal-content", children: [
+jsxRuntimeExports.jsx("strong", { children: "Refusal:" }),
+          " ",
+          item.refusal
+        ] });
+      case "file":
+        return jsxRuntimeExports.jsx("div", { children: JSON.stringify(item, null, 2) });
+    }
   };
   const ToolItem$1 = ({ tool, index }) => {
     switch (tool.type) {
@@ -13748,15 +13871,19 @@ jsxRuntimeExports.jsx("div", { className: "section-content", children: jsxRuntim
           index
         );
       case "custom":
-        return jsxRuntimeExports.jsx(Tool, { tool: { name: tool.custom.name, description: tool.custom.description }, index }, index);
+        return jsxRuntimeExports.jsx(
+          Tool,
+          {
+            tool: { name: tool.custom.name, description: tool.custom.description, input_schema: tool.custom.format },
+            index
+          },
+          index
+        );
     }
   };
   const OpenAIRequestVisualizer = ({ obj }) => {
     return jsxRuntimeExports.jsxs("div", { className: "container", children: [
-jsxRuntimeExports.jsxs("div", { className: "header", children: [
-jsxRuntimeExports.jsx("h1", { children: "OpenAI API Request" }),
-jsxRuntimeExports.jsx("p", {})
-      ] }),
+jsxRuntimeExports.jsx("div", { className: "header", children: jsxRuntimeExports.jsx("h1", { children: "OpenAI API Request" }) }),
 jsxRuntimeExports.jsxs(BasicInfo, { children: [
 jsxRuntimeExports.jsx(InfoItem, { label: "model", value: obj.model }),
 jsxRuntimeExports.jsx(InfoItem, { label: "Temperature", value: obj.temperature }),
@@ -13767,9 +13894,10 @@ jsxRuntimeExports.jsx(InfoItem, { label: "Presence Penalty", value: obj.presence
 jsxRuntimeExports.jsx(InfoItem, { label: "Stream", value: obj.stream }),
 jsxRuntimeExports.jsx(InfoItem, { label: "n", value: obj.n })
       ] }),
-      obj.messages && jsxRuntimeExports.jsx(Messages$1, { messages: obj.messages }),
-      obj.prompt && jsxRuntimeExports.jsx(Prompt, { prompt: obj.prompt }),
-      obj.tools && jsxRuntimeExports.jsx(Tools, { title: "Tools", defaultOpen: false, children: obj.tools.map((tool, index) => jsxRuntimeExports.jsx(ToolItem$1, { tool, index }, index)) })
+jsxRuntimeExports.jsx(Messages, { title: "Messages", count: obj.messages?.length, defaultOpen: true, children: obj.messages?.length ? obj.messages.map((message, index) => {
+        return jsxRuntimeExports.jsx(Message, { role: message.role, name: message?.name, index, open: index === obj.messages.length - 1, children: jsxRuntimeExports.jsx(RoleMessage, { message }) }, index);
+      }) : jsxRuntimeExports.jsx("div", { className: "empty-state", children: "no messages" }) }),
+jsxRuntimeExports.jsx(Tools, { title: "Tools", count: obj.tools?.length, defaultOpen: false, children: obj.tools?.map((tool, index) => jsxRuntimeExports.jsx(ToolItem$1, { tool, index }, index)) })
     ] });
   };
   function isLLMRequest(parsedObj) {
@@ -13801,7 +13929,8 @@ jsxRuntimeExports.jsx(InfoItem, { label: "n", value: obj.n })
       "stop": "finish-stop",
       "length": "finish-length",
       "tool_calls": "finish-tool-calls",
-      "content_filter": "finish-content-filter"
+      "content_filter": "finish-content-filter",
+      "function_call": "finish-tool-calls"
     };
     return classMap[finishReason] || "";
   };
@@ -13825,71 +13954,18 @@ jsxRuntimeExports.jsx(UsageItem$1, { label: "Cached Tokens", value: usage.prompt
       ] }) })
     ] });
   };
-  const ToolCall = ({ toolCall, index }) => {
-    const [expanded, setExpanded] = reactExports.useState(true);
-    let parsedArguments = {};
-    if (toolCall.function?.arguments) {
-      try {
-        if (typeof toolCall.function?.arguments === "string") {
-          parsedArguments = JSON.parse(toolCall.function.arguments);
-        } else {
-          parsedArguments = toolCall.function.arguments;
-        }
-      } catch {
-        parsedArguments = {};
-      }
-    } else if (typeof toolCall.function === "object" && toolCall.function !== null) {
-      parsedArguments = toolCall.function.arguments || {};
-    }
-    return jsxRuntimeExports.jsxs("details", { open: expanded, className: "tool-call-item", children: [
-jsxRuntimeExports.jsx("summary", { className: "tool-call-header", children: jsxRuntimeExports.jsxs("div", { children: [
-jsxRuntimeExports.jsx("div", { className: "tool-call-name", children: toolCall.function?.name || "Unknown Function" }),
-jsxRuntimeExports.jsxs("div", { className: "tool-call-id", children: [
-          "ID: ",
-          toolCall.id || "N/A"
-        ] })
-      ] }) }),
-jsxRuntimeExports.jsx("div", { className: "tool-call-content", children: jsxRuntimeExports.jsx("pre", { className: "json-content", dangerouslySetInnerHTML: { __html: renderToolChoiceArgument(parsedArguments) } }) })
-    ] });
-  };
   const ChoiceContentSection = ({
     content,
-    setTitle,
-    setContentExpanded,
-    contentExpanded
+    setTitle
   }) => {
     if (!content) return null;
-    return jsxRuntimeExports.jsxs(
-      "details",
-      {
-        open: contentExpanded,
-        className: "content-section",
-        onChange: (e) => setContentExpanded(e.target.open),
-        children: [
-jsxRuntimeExports.jsx("summary", { className: "content-header", children: jsxRuntimeExports.jsx("h4", { children: setTitle }) }),
-jsxRuntimeExports.jsx("div", { className: "prose", children: typeof content === "string" ? jsxRuntimeExports.jsx("div", { dangerouslySetInnerHTML: { __html: renderChoiceTextContent(content) } }) : jsxRuntimeExports.jsx("pre", { className: "json-content", children: JSON.stringify(content, null, 2) }) })
-        ]
-      }
-    );
+    return jsxRuntimeExports.jsx(Section, { title: setTitle, defaultOpen: true, children: jsxRuntimeExports.jsx(ProseContent, { contentStr: content }) });
   };
   const ChoiceReasoningContentSection = ({
-    reasoning_content,
-    setReasoningExpanded,
-    reasoningExpanded
+    reasoning_content
   }) => {
     if (!reasoning_content) return null;
-    return jsxRuntimeExports.jsxs(
-      "details",
-      {
-        open: reasoningExpanded,
-        className: "reasoning-content-section",
-        onChange: (e) => setReasoningExpanded(e.target.open),
-        children: [
-jsxRuntimeExports.jsx("summary", { className: "reasoning-header", children: jsxRuntimeExports.jsx("h4", { children: "Reasoning Content" }) }),
-jsxRuntimeExports.jsx("div", { className: "prose", children: jsxRuntimeExports.jsx("div", { dangerouslySetInnerHTML: { __html: renderChoiceTextContent(reasoning_content) } }) })
-        ]
-      }
-    );
+    return jsxRuntimeExports.jsx(Section, { title: "Reasoning Content", children: jsxRuntimeExports.jsx(ProseContent, { contentStr: reasoning_content }) });
   };
   const LogProbsSection = ({ logprobs }) => {
     if (!logprobs) return null;
@@ -13898,56 +13974,45 @@ jsxRuntimeExports.jsx("h4", { className: "margin-bottom-sm text-small", children
 jsxRuntimeExports.jsx("pre", { className: "json-content", children: JSON.stringify(logprobs, null, 2) })
     ] });
   };
-  const ToolCallsContainer = ({ toolCalls }) => {
+  const ToolCalls = ({ toolCalls }) => {
     if (!toolCalls || !toolCalls.length) return null;
-    return jsxRuntimeExports.jsxs("div", { className: "tool-calls-container", children: [
-jsxRuntimeExports.jsx("h4", { className: "margin-bottom-sm text-small", children: "Tool Calls:" }),
-      toolCalls.map((toolCall, index) => jsxRuntimeExports.jsx(ToolCall, { toolCall, index }, index))
-    ] });
+    return jsxRuntimeExports.jsx(Section, { title: `Tool Calls (${toolCalls.length})`, defaultOpen: true, children: toolCalls.map((toolCall, index) => {
+      const toolCallId = toolCall.id || "N/A";
+      const toolType = toolCall.type || "function";
+      const toolName = toolCall.type === "custom" ? toolCall.custom.name : toolCall.function.name;
+      const argumentsStr = toolCall.type === "custom" ? toolCall.custom.input : toolCall.function.arguments;
+      return jsxRuntimeExports.jsx(
+        ToolCall,
+        {
+          callId: toolCallId,
+          toolName,
+          toolType,
+          argumentsStr,
+          index
+        },
+        index
+      );
+    }) });
   };
   const ChoiceItem = ({ choice, index }) => {
-    const [expanded, setExpanded] = reactExports.useState(true);
-    const [reasoningExpanded, setReasoningExpanded] = reactExports.useState(false);
-    const [contentExpanded, setContentExpanded] = reactExports.useState(true);
-    const content = choice.message?.content || choice.content;
-    const reasoning_content = choice.message?.reasoning_content || choice.reasoning_content;
-    const tool_calls = choice.message?.tool_calls || choice.tool_calls;
+    const content = choice.message?.content;
+    const reasoning_content = choice.message?.reasoning_content;
+    const tool_calls = choice.message?.tool_calls;
     const finish_reason = choice.finish_reason;
     const logprobs = choice.logprobs;
     const finishReasonClass = getFinishReasonClass(finish_reason);
-    return jsxRuntimeExports.jsxs("details", { open: expanded, className: "choice-item", children: [
-jsxRuntimeExports.jsx("summary", { className: "choice-header", children: jsxRuntimeExports.jsxs("div", { className: "flex-container", children: [
+    return jsxRuntimeExports.jsxs(Section, { title: jsxRuntimeExports.jsxs("div", { className: "flex-container", children: [
 jsxRuntimeExports.jsxs("span", { className: "choice-badge", children: [
-          "Choice ",
-          index + 1
-        ] }),
+        "Choice ",
+        index + 1
+      ] }),
 jsxRuntimeExports.jsx("span", { className: `finish-reason-badge ${finishReasonClass}`, children: finish_reason || "unknown" })
-      ] }) }),
-jsxRuntimeExports.jsxs("div", { className: "choice-content", children: [
-        logprobs && jsxRuntimeExports.jsx("div", { className: "choice-meta", children: jsxRuntimeExports.jsxs("div", { className: "choice-meta-item", children: [
-jsxRuntimeExports.jsx("span", { children: "Log Probs:" }),
-jsxRuntimeExports.jsx("span", { children: "Available" })
-        ] }) }),
-jsxRuntimeExports.jsx(
-          ChoiceReasoningContentSection,
-          {
-            reasoning_content,
-            setReasoningExpanded,
-            reasoningExpanded
-          }
-        ),
-jsxRuntimeExports.jsx(
-          ChoiceContentSection,
-          {
-            content,
-            setTitle: "Content",
-            setContentExpanded,
-            contentExpanded
-          }
-        ),
-jsxRuntimeExports.jsx(ToolCallsContainer, { toolCalls: tool_calls }),
+    ] }), defaultOpen: true, children: [
+jsxRuntimeExports.jsx(Section, { title: "LogProbs", defaultOpen: false, children: logprobs && jsxRuntimeExports.jsx(JsonContent, { jsonObj: logprobs }) }),
+jsxRuntimeExports.jsx(ChoiceReasoningContentSection, { reasoning_content }),
+jsxRuntimeExports.jsx(ChoiceContentSection, { content, setTitle: "Content" }),
+jsxRuntimeExports.jsx(ToolCalls, { toolCalls: tool_calls }),
 jsxRuntimeExports.jsx(LogProbsSection, { logprobs })
-      ] })
     ] });
   };
   const ChoicesSection = ({ choices = [], eventCount }) => {
@@ -13965,18 +14030,7 @@ jsxRuntimeExports.jsx("span", { children: "(0)" })
 jsxRuntimeExports.jsx("div", { className: "section-content", children: jsxRuntimeExports.jsx("div", { className: "empty-state", children: "No choices available" }) })
       ] });
     }
-    const [isOpen, setIsOpen] = reactExports.useState(true);
-    return jsxRuntimeExports.jsxs("details", { open: isOpen, className: "section", onChange: (e) => setIsOpen(e.target.open), children: [
-jsxRuntimeExports.jsx("summary", { className: "section-header", children: jsxRuntimeExports.jsxs("span", { className: "section-title", children: [
-        "Choices",
-jsxRuntimeExports.jsxs("span", { children: [
-          "(",
-          choices.length,
-          ")"
-        ] })
-      ] }) }),
-jsxRuntimeExports.jsx("div", { className: "section-content", children: choices.map((choice, index) => jsxRuntimeExports.jsx(ChoiceItem, { choice, index }, index)) })
-    ] });
+    return jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: choices.map((choice, index) => jsxRuntimeExports.jsx(ChoiceItem, { choice, index }, index)) });
   };
   const BaseOpenAIResponseVisualizer = ({
     response,
@@ -14005,9 +14059,122 @@ jsxRuntimeExports.jsx(InfoItem, { label: "System Fingerprint", value: response.s
 jsxRuntimeExports.jsx(ChoicesSection, { choices: response.choices, eventCount })
     ] });
   };
-  const OpenAIResponseVisualizer = ({ response }) => {
-    return jsxRuntimeExports.jsx(BaseOpenAIResponseVisualizer, { response, title: "OpenAI API Response" });
+  const OpenAIResponseVisualizer = ({ response, eventCount }) => {
+    return jsxRuntimeExports.jsx(BaseOpenAIResponseVisualizer, { response, eventCount, title: "OpenAI API Response" });
   };
+  function processSSEEvents(events) {
+    if (!events.length) {
+      throw new Error("No events to process");
+    }
+    let currentSnapshot = {
+      id: "N/A",
+      choices: [],
+      created: 0,
+      model: "N/A",
+      object: "chat.completion"
+    };
+    for (const event of events) {
+      if (event.id) {
+        currentSnapshot.id = event.id;
+      }
+      if (event.created) {
+        currentSnapshot.created = event.created;
+      }
+      if (event.model) {
+        currentSnapshot.model = event.model;
+      }
+      if (event.service_tier) {
+        currentSnapshot.service_tier = event.service_tier;
+      }
+      if (event.usage) {
+        currentSnapshot.usage = event.usage;
+      }
+      if (event.system_fingerprint) {
+        currentSnapshot.system_fingerprint = event.system_fingerprint;
+      }
+      for (const chunkChoice of event.choices) {
+        let idx = chunkChoice.index;
+        if (!currentSnapshot.choices[idx]) {
+          currentSnapshot.choices[idx] = {
+            message: {
+              role: "assistant",
+              refusal: "",
+              reasoning_content: "",
+              content: "",
+              tool_calls: [],
+              function_call: null
+            },
+            index: chunkChoice.index,
+            finish_reason: "stop",
+            logprobs: chunkChoice.logprobs ? chunkChoice.logprobs : null
+          };
+        }
+        const choice = currentSnapshot.choices[idx];
+        if (chunkChoice.finish_reason) {
+          choice.finish_reason = chunkChoice.finish_reason;
+        }
+        if (chunkChoice.logprobs) {
+          choice.logprobs = chunkChoice.logprobs;
+        }
+        if (chunkChoice.delta) {
+          if (chunkChoice.delta.refusal) {
+            choice.message.refusal += chunkChoice.delta.refusal;
+          }
+          if (chunkChoice.delta.reasoning_content) {
+            choice.message.reasoning_content += chunkChoice.delta.reasoning_content;
+          }
+          if (chunkChoice.delta.content) {
+            choice.message.content += chunkChoice.delta.content;
+          }
+          if (chunkChoice.delta.function_call) {
+            if (!choice.message.function_call) {
+              choice.message.function_call = {
+                arguments: "",
+                name: ""
+              };
+            }
+            if (chunkChoice.delta.function_call.arguments) {
+              choice.message.function_call.arguments += chunkChoice.delta.function_call.arguments;
+            }
+            if (chunkChoice.delta.function_call.name) {
+              choice.message.function_call.name += chunkChoice.delta.function_call.name;
+            }
+          }
+          if (chunkChoice.delta.tool_calls && chunkChoice.delta.tool_calls.length) {
+            for (const toolCallDelta of chunkChoice.delta.tool_calls) {
+              const idx2 = toolCallDelta.index;
+              if (!choice.message.tool_calls) {
+                choice.message.tool_calls = [];
+              }
+              if (!choice.message.tool_calls[idx2]) {
+                choice.message.tool_calls[idx2] = {
+                  type: toolCallDelta.type || "function",
+                  id: "",
+                  function: {
+                    arguments: "",
+                    name: ""
+                  }
+                };
+              }
+              const toolCall = choice.message.tool_calls[idx2];
+              if (toolCallDelta.id) {
+                toolCall.id += toolCallDelta.id;
+              }
+              if (toolCallDelta.function) {
+                if (toolCallDelta.function.arguments) {
+                  toolCall.function.arguments += toolCallDelta.function.arguments;
+                }
+                if (toolCallDelta.function.name) {
+                  toolCall.function.name += toolCallDelta.function.name;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return currentSnapshot;
+  }
   function isLLMResponse(parsedObj) {
     return !!parsedObj && !!parsedObj["choices"] && !!parsedObj["model"];
   }
@@ -14015,142 +14182,69 @@ jsxRuntimeExports.jsx(ChoicesSection, { choices: response.choices, eventCount })
     name = "openai-response";
     async render(uuid, action, viewerName = "Auto") {
       let json = await this.fetchFlowData(uuid, action, viewerName);
-      if (json.view_name === "JSON") {
-        try {
-          const parsedObj = this.parseJSON(json.text);
-          if (!isLLMResponse(parsedObj)) {
-            return;
-          }
-          await this.renderReactComponent(OpenAIResponseVisualizer, { response: parsedObj });
-        } catch (e) {
-          console.error("Error parsing JSON response:", e);
-        }
+      const response = await this.parseResponseForView(json);
+      console.log("OpenAI response to render:", response);
+      if (response) {
+        await this.renderReactComponent(OpenAIResponseVisualizer, { response });
       }
     }
-  }
-  function processSSEEvents(events) {
-    if (!events.length) {
-      throw new Error("No events to process");
-    }
-    const finalEvent = events.find((event) => event.usage) || events[events.length - 1];
-    const aggregatedChoices = aggregateChoices(events);
-    return {
-      id: finalEvent.id || "N/A",
-      object: finalEvent.object || "N/A",
-      created: finalEvent.created || 0,
-      model: finalEvent.model || "N/A",
-      system_fingerprint: finalEvent.system_fingerprint,
-      choices: aggregatedChoices,
-      usage: finalEvent.usage,
-      eventCount: events.length
-    };
-  }
-  function aggregateChoices(events) {
-    const choiceMap = new Map();
-    for (const event of events) {
-      if (!event.choices) continue;
-      for (const choice of event.choices) {
-        const index = choice.index;
-        if (!choiceMap.has(index)) {
-          choiceMap.set(index, {
-            index,
-            role: "N/A",
-            content: "",
-            reasoning_content: "",
-            tool_calls: new Map(),
-            finish_reason: "N/A",
-            logprobs: void 0
-          });
-        }
-        const agg = choiceMap.get(index);
-        const delta = choice.delta;
-        if (delta) {
-          if (delta.role) agg.role = delta.role;
-          if (delta.content) agg.content += delta.content;
-          if (delta.reasoning_content) agg.reasoning_content += delta.reasoning_content;
-          if (delta.logprobs) agg.logprobs = delta.logprobs;
-          if (delta.tool_calls) {
-            for (const toolCallDelta of delta.tool_calls) {
-              const toolIndex = toolCallDelta.index;
-              if (!agg.tool_calls.has(toolIndex)) {
-                agg.tool_calls.set(toolIndex, {
-                  index: toolIndex,
-                  id: "N/A",
-                  type: "N/A",
-                  function: { name: "N/A", arguments: "" }
-                });
-              }
-              const toolCall = agg.tool_calls.get(toolIndex);
-              if (toolCallDelta.id) toolCall.id = toolCallDelta.id;
-              if (toolCallDelta.type) toolCall.type = toolCallDelta.type;
-              if (toolCallDelta.function?.name) toolCall.function.name = toolCallDelta.function.name;
-              if (toolCallDelta.function?.arguments) {
-                toolCall.function.arguments += toolCallDelta.function.arguments;
-              }
-            }
-          }
-        }
-        if (choice.finish_reason) {
-          agg.finish_reason = choice.finish_reason;
-        }
+    async parseResponseForView(json) {
+      console.log("Parsing OpenAI response for view:", json);
+      switch (json.view_name) {
+        case "JSON":
+          return await this.parseJsonResponse(json.text);
+        case "Raw":
+          return await this.parseSSEJsonResponse(json.text);
+        default:
+          return null;
       }
     }
-    return Array.from(choiceMap.values()).map((agg) => ({
-      index: agg.index,
-      role: agg.role,
-      content: agg.content,
-      reasoning_content: agg.reasoning_content,
-      tool_calls: Array.from(agg.tool_calls.values()).sort((a, b) => a.index - b.index),
-      finish_reason: agg.finish_reason,
-      logprobs: agg.logprobs
-    })).sort((a, b) => a.index - b.index);
-  }
-  const OpenAISSEResponseVisualizer = (obj) => {
-    const response = {
-      id: void 0,
-object: "chat.completion",
-created: obj.created,
-      model: obj.model,
-      system_fingerprint: obj.system_fingerprint,
-      usage: obj.usage,
-      choices: obj.choices
-    };
-    return jsxRuntimeExports.jsx(
-      BaseOpenAIResponseVisualizer,
-      {
-        response,
-        eventCount: obj.eventCount,
-        title: "OpenAI SSE Response",
-        subtitle: "Server-Sent Events Response Visualization"
+    async parseJsonResponse(text) {
+      try {
+        const parsedObj = this.parseJSON(text);
+        if (!isLLMResponse(parsedObj)) {
+          return null;
+        }
+        return parsedObj;
+      } catch (e) {
+        console.error("Error parsing JSON response:", e);
+        return null;
       }
-    );
-  };
-  class OpenAISSERenderer extends BaseRenderer {
-    name = "openai-sse";
-    async render(uuid, action, viewerName = "Auto") {
-      let json = await this.fetchFlowData(uuid, action, viewerName);
-      if (json.view_name === "Raw") {
+    }
+    async parseSSEJsonResponse(text) {
+      try {
+        console.log("Parsing SSE response text:", text);
         const events = [];
-        json.text.split("\n").forEach((line) => {
+        text.split("\n").forEach((line) => {
           line = line.trim();
           if (line.startsWith("data:")) {
-            const dataContent = line.slice(5);
-            if (dataContent === "[DONE]") return;
+            const dataContent = line.slice(5).trim();
+            if (dataContent === "[DONE]" || dataContent === "data: [DONE]") return;
             try {
-              events.push(this.parseJSON(dataContent));
-            } catch {
+              const parsedData = this.parseJSON(dataContent);
+              events.push(parsedData);
+            } catch (parseError) {
+              console.error("Error parsing SSE event data:", dataContent, parseError);
+            }
+          } else if (line.startsWith("{") && line.endsWith("}")) {
+            try {
+              const parsedData = this.parseJSON(line);
+              if (parsedData && typeof parsedData.choices === "object") {
+                events.push(parsedData);
+              }
+            } catch (parseError) {
+              console.error("Error parsing SSE event data:", line, parseError);
             }
           }
         });
-        const input = processSSEEvents(events);
-        await this.renderReactComponent(OpenAISSEResponseVisualizer, {
-          model: input.model,
-          created: input.created,
-          system_fingerprint: input.system_fingerprint,
-          eventCount: input.eventCount,
-          usage: input.usage,
-          choices: input.choices
-        });
+        if (events.length > 0) {
+          return processSSEEvents(events);
+        } else {
+          return null;
+        }
+      } catch (e) {
+        console.error("Error processing SSE response:", e);
+        return null;
       }
     }
   }
@@ -14158,8 +14252,7 @@ created: obj.created,
     name: "openai",
     detector: new OpenAIDetector(),
     requestRenderer: new OpenAIRequestRenderer(),
-    responseRenderer: new OpenAIResponseRenderer(),
-    sseRenderer: new OpenAISSERenderer()
+    responseRenderer: new OpenAIResponseRenderer()
   };
   class AnthropicDetector {
     name = "anthropic";
@@ -14171,97 +14264,65 @@ created: obj.created,
       return path.endsWith("/messages");
     }
   }
-  const MessageContentBlock = ({ title, children, defaultOpen = false, index = 0 }) => {
-    const [expanded, setExpanded] = reactExports.useState(defaultOpen);
-    return jsxRuntimeExports.jsxs("details", { className: "content-block-item", open: expanded, onChange: (e) => setExpanded(e.target.open), children: [
-jsxRuntimeExports.jsx("summary", { className: "content-block-header", children: jsxRuntimeExports.jsx("span", { className: "content-type-badge", children: title }) }),
-jsxRuntimeExports.jsx("div", { className: "content-block-content", children })
-    ] }, index);
-  };
-  const MessageContent = ({ message }) => {
-    if (typeof message.content === "string") {
-      return jsxRuntimeExports.jsx("div", { className: "prose", "data-format": "string", dangerouslySetInnerHTML: { __html: renderChoiceTextContent(message.content) } });
-    } else if (Array.isArray(message.content)) {
-      return jsxRuntimeExports.jsx("div", { "data-format": "array", children: message.content.map((item, idx) => {
+  const MessageContent = ({ content }) => {
+    if (typeof content === "string") {
+      return jsxRuntimeExports.jsx(ProseContent, { contentStr: content });
+    } else if (Array.isArray(content)) {
+      return jsxRuntimeExports.jsx("div", { "data-format": "array", children: content.map((item, idx) => {
         const contentType = item.type || "unknown";
-        const contentTitle = item.type === "tool_use" ? `${item.type}: ${item.name || "unnamed"}` : contentType;
+        const contentTitle = item.type === "tool_use" ? `${contentType}: ${item.name || "unnamed"}` : contentType;
         let contentElement;
         switch (item.type) {
           case "text":
-            contentElement = jsxRuntimeExports.jsx("div", { className: "prose", "data-format": "string", dangerouslySetInnerHTML: { __html: renderChoiceTextContent(item.text) } });
+            contentElement = jsxRuntimeExports.jsx(ProseContent, { contentStr: item.text });
             break;
           case "image":
-            contentElement = jsxRuntimeExports.jsx("div", { className: "image-content", children: jsxRuntimeExports.jsxs("div", { children: [
-              "Source: ",
-              JSON.stringify(item.source, null, 2)
-            ] }) });
+            const imageSource = item.source;
+            let imageUrl = "";
+            if (imageSource && typeof imageSource === "object") {
+              switch (imageSource.type) {
+                case "base64":
+                  if (imageSource.media_type && imageSource.data) {
+                    imageUrl = `data:${imageSource.media_type};base64,${imageSource.data}`;
+                  }
+                  break;
+                case "url":
+                  imageUrl = imageSource.url;
+                  break;
+              }
+            }
+            contentElement = jsxRuntimeExports.jsx("div", { className: "image-content", children: jsxRuntimeExports.jsx(
+              "img",
+              {
+                src: imageUrl,
+                alt: "Embedded image",
+                style: { maxWidth: "400px", height: "auto", border: "1px solid #ccc", borderRadius: "4px" }
+              }
+            ) });
             break;
           case "tool_use":
-            contentElement = jsxRuntimeExports.jsxs("div", { className: "tool-call-content", children: [
-jsxRuntimeExports.jsxs("div", { children: [
-                "Tool ID: ",
-                item.id
-              ] }),
-jsxRuntimeExports.jsxs("div", { className: "tool-input", children: [
-                "Input: ",
-jsxRuntimeExports.jsx("pre", { children: JSON.stringify(item.input, null, 2) })
-              ] })
-            ] });
+            contentElement = jsxRuntimeExports.jsx(
+              ToolCall,
+              {
+                callId: item.id || "N/A",
+                toolName: item.name || "unnamed",
+                toolType: item.type,
+                argumentsStr: JSON.stringify(item.input || {}),
+                index: idx
+              }
+            );
             break;
           case "tool_result":
-            contentElement = jsxRuntimeExports.jsxs("div", { className: "tool-result-content", children: [
-jsxRuntimeExports.jsxs("div", { children: [
-                "Tool Use ID: ",
-                item.tool_use_id
-              ] }),
-              item.content && jsxRuntimeExports.jsx("div", { className: "result-content", children: Array.isArray(item.content) ? item.content.map((contentItem, contentIdx) => jsxRuntimeExports.jsxs("div", { children: [
-                "Result content item: ",
-                JSON.stringify(contentItem)
-              ] }, contentIdx)) : item.content })
-            ] });
+            contentElement = jsxRuntimeExports.jsx(ToolResult, { toolUseId: item.tool_use_id || "N/A", children: item.content && jsxRuntimeExports.jsx(MessageContent, { content: item.content }) });
             break;
           case "thinking":
-            contentElement = jsxRuntimeExports.jsx("div", { className: "thinking-content", dangerouslySetInnerHTML: { __html: renderChoiceTextContent(item.thinking) } });
+            contentElement = jsxRuntimeExports.jsx("div", { className: "thinking-content", children: jsxRuntimeExports.jsx(ProseContent, { contentStr: item.thinking }) });
             break;
           default:
             contentElement = jsxRuntimeExports.jsx("div", { className: "json-content", children: jsxRuntimeExports.jsx("pre", { children: JSON.stringify(item, null, 2) }) });
         }
-        return jsxRuntimeExports.jsx(MessageContentBlock, { title: contentTitle, defaultOpen: idx === 0, children: contentElement }, idx);
+        return jsxRuntimeExports.jsx(MessageContentBlock, { title: contentTitle, defaultOpen: false, children: contentElement }, idx);
       }) });
-    }
-  };
-  const Message = ({ message, index, isLast }) => {
-    const [isOpen, setIsOpen] = reactExports.useState(isLast ? true : false);
-    const roleClass = `role-${message.role || "unknown"}`;
-    return jsxRuntimeExports.jsxs("details", { open: isOpen, className: "message-item", onChange: (e) => setIsOpen(e.target.open), children: [
-jsxRuntimeExports.jsx("summary", { className: "message-header", children: jsxRuntimeExports.jsxs("div", { className: "flex-container", children: [
-jsxRuntimeExports.jsx("span", { className: `role-badge ${roleClass}`, children: message.role || "unknown" }),
-jsxRuntimeExports.jsxs("span", { className: "text-small", children: [
-          "#",
-          index + 1
-        ] })
-      ] }) }),
-jsxRuntimeExports.jsx("div", { className: "message-content", children: jsxRuntimeExports.jsx(MessageContent, { message }) })
-    ] });
-  };
-  const SystemMessageContent = ({ systemMessage }) => {
-    if (typeof systemMessage === "string") {
-      return jsxRuntimeExports.jsx(
-        "div",
-        {
-          className: "prose data-format-string",
-          dangerouslySetInnerHTML: { __html: renderChoiceTextContent(systemMessage) }
-        }
-      );
-    } else if (Array.isArray(systemMessage)) {
-      return jsxRuntimeExports.jsx("div", { className: "anthropic-content-array", children: systemMessage.map((item, index) => {
-        if (item.type !== "text") {
-          return null;
-        }
-        return jsxRuntimeExports.jsx(MessageContentBlock, { title: `text`, defaultOpen: true, children: item.text && jsxRuntimeExports.jsx("div", { className: "prose", dangerouslySetInnerHTML: { __html: renderChoiceTextContent(item.text) } }) }, index);
-      }) });
-    } else {
-      return jsxRuntimeExports.jsx("div", { className: "json-content", children: JSON.stringify(systemMessage) });
     }
   };
   const ToolItem = ({ tool, index }) => {
@@ -14289,40 +14350,21 @@ jsxRuntimeExports.jsx("summary", { className: "section-header", children: jsxRun
 jsxRuntimeExports.jsx("div", { className: "section-content", children: jsxRuntimeExports.jsx("pre", { children: JSON.stringify(tool_choice, null, 2) }) })
     ] });
   };
-  const Messages = ({ messages = [], systemMessage = "" }) => {
-    const [isOpen, setIsOpen] = reactExports.useState(true);
-    const [isSystemMessageOpen, setIsSystemMessageOpen] = reactExports.useState(false);
-    return jsxRuntimeExports.jsxs("details", { open: isOpen, className: "section", onChange: (e) => setIsOpen(e.target.open), children: [
-jsxRuntimeExports.jsx("summary", { className: "section-header", children: jsxRuntimeExports.jsxs("span", { className: "section-title", children: [
-        "Messages",
-        messages.length ? jsxRuntimeExports.jsxs("span", { children: [
-          "(",
-          messages.length,
-          ")"
-        ] }) : ""
-      ] }) }),
-jsxRuntimeExports.jsxs("div", { className: "section-content", children: [
-        systemMessage && jsxRuntimeExports.jsxs("details", { open: isSystemMessageOpen, className: "message-item", onChange: (e) => setIsSystemMessageOpen(e.target.open), children: [
-jsxRuntimeExports.jsx("summary", { className: "message-header", children: jsxRuntimeExports.jsxs("div", { className: "flex-container", children: [
-jsxRuntimeExports.jsx("span", { className: "role-badge role-system", children: "system" }),
-jsxRuntimeExports.jsx("span", { className: "text-small", children: "#0" })
-          ] }) }),
-jsxRuntimeExports.jsx("div", { className: "message-content", children: jsxRuntimeExports.jsx(SystemMessageContent, { systemMessage }) })
-        ] }),
-        !messages.length ? jsxRuntimeExports.jsx("div", { className: "empty-state", children: "no messages" }) : messages.map((message, index) => jsxRuntimeExports.jsx(Message, { message, index, isLast: index === messages.length - 1 }, index))
-      ] })
+  const MessagesWithSystem = ({ messages = [], systemMessage = "" }) => {
+    if (!messages?.length && !systemMessage) {
+      return jsxRuntimeExports.jsx("div", { className: "empty-state", children: "no messages" });
+    }
+    return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      systemMessage && jsxRuntimeExports.jsx(Message, { role: "system", index: -1, open: false, children: jsxRuntimeExports.jsx(MessageContent, { content: systemMessage }) }, -1),
+      messages?.length && messages.map((message, index) => jsxRuntimeExports.jsx(Message, { role: message.role, index, open: index === messages.length - 1, children: jsxRuntimeExports.jsx(MessageContent, { content: message.content }) }, index))
     ] });
   };
   const AnthropicRequestVisualizer = ({ request }) => {
     if (!request) {
       return jsxRuntimeExports.jsx("div", { children: "No request data available" });
     }
-    console.log("Rendering Anthropic request:", request);
     return jsxRuntimeExports.jsxs("div", { className: "container", children: [
-jsxRuntimeExports.jsxs("div", { className: "header", children: [
-jsxRuntimeExports.jsx("h1", { children: "Anthropic API Request" }),
-jsxRuntimeExports.jsx("p", {})
-      ] }),
+jsxRuntimeExports.jsx("div", { className: "header", children: jsxRuntimeExports.jsx("h1", { children: "Anthropic API Request" }) }),
 jsxRuntimeExports.jsxs(BasicInfo, { children: [
 jsxRuntimeExports.jsx(InfoItem, { label: "model", value: request.model }),
 jsxRuntimeExports.jsx(InfoItem, { label: "max_tokens", value: request.max_tokens }),
@@ -14332,9 +14374,9 @@ jsxRuntimeExports.jsx(InfoItem, { label: "top_k", value: request.top_k }),
 jsxRuntimeExports.jsx(InfoItem, { label: "stop_sequences", value: request.stop_sequences ? request.stop_sequences.join(", ") : void 0 }),
 jsxRuntimeExports.jsx(InfoItem, { label: "stream", value: request.stream })
       ] }),
-jsxRuntimeExports.jsx(Messages, { messages: request.messages, systemMessage: request.system }),
+jsxRuntimeExports.jsx(Messages, { title: "Messages", count: request.messages?.length, defaultOpen: true, children: jsxRuntimeExports.jsx(MessagesWithSystem, { messages: request.messages, systemMessage: request.system }) }),
 jsxRuntimeExports.jsx(ToolChoiceSection, { tool_choice: request.tool_choice }),
-      request.tools && jsxRuntimeExports.jsx(Tools, { title: "Tools", defaultOpen: false, children: request.tools.map((tool, index) => jsxRuntimeExports.jsx(ToolItem, { tool, index })) })
+      request.tools && jsxRuntimeExports.jsx(Tools, { title: "Tools", count: request.tools.length, defaultOpen: false, children: request.tools.map((tool, index) => jsxRuntimeExports.jsx(ToolItem, { tool, index })) })
     ] });
   };
   function isAnthropicRequest(parsedObj) {
@@ -14376,7 +14418,7 @@ jsxRuntimeExports.jsx("summary", { className: "content-header", children: jsxRun
         index + 1
       ] }) }),
 jsxRuntimeExports.jsxs("div", { className: "content-body", children: [
-jsxRuntimeExports.jsx("div", { className: "prose", dangerouslySetInnerHTML: { __html: renderChoiceTextContent(block.text || "") } }),
+jsxRuntimeExports.jsx(ProseContent, { contentStr: block.text || "" }),
         block.citations && block.citations.length > 0 && jsxRuntimeExports.jsxs("div", { className: "citations-section", children: [
 jsxRuntimeExports.jsx("div", { className: "section-title", children: "Citations" }),
           block.citations.map((citation, citationIndex) => jsxRuntimeExports.jsx("div", { className: "citation-item", children: jsxRuntimeExports.jsx("pre", { children: JSON.stringify(citation, null, 2) }) }, citationIndex))
@@ -14385,35 +14427,15 @@ jsxRuntimeExports.jsx("div", { className: "section-title", children: "Citations"
     ] });
   };
   const ToolUseContentBlock = ({ block, index }) => {
-    const [expanded, setExpanded] = reactExports.useState(true);
     const isServerToolUse = block.type === "server_tool_use";
-    return jsxRuntimeExports.jsxs(
-      "details",
+    return jsxRuntimeExports.jsx(
+      ToolCall,
       {
-        open: expanded,
-        className: `content-block ${isServerToolUse ? "server-tool-block" : ""}`,
-        onChange: (e) => setExpanded(e.target.open),
-        children: [
-jsxRuntimeExports.jsx("summary", { className: "content-header", children: jsxRuntimeExports.jsxs("span", { children: [
-            isServerToolUse ? "Server Tool Use" : "Tool Use",
-            " #",
-            index + 1
-          ] }) }),
-jsxRuntimeExports.jsx("div", { className: "content-body", children: jsxRuntimeExports.jsxs("div", { className: "tool-info", children: [
-jsxRuntimeExports.jsxs("div", { className: "info-item", children: [
-jsxRuntimeExports.jsx("div", { className: "info-label", children: "Tool ID" }),
-jsxRuntimeExports.jsx("div", { className: "info-value", children: block.id })
-            ] }),
-jsxRuntimeExports.jsxs("div", { className: "info-item", children: [
-jsxRuntimeExports.jsx("div", { className: "info-label", children: "Tool Name" }),
-jsxRuntimeExports.jsx("div", { className: "info-value", children: block.name })
-            ] }),
-            block.input && jsxRuntimeExports.jsxs("div", { className: "info-item", children: [
-jsxRuntimeExports.jsx("div", { className: "info-label", children: "Tool Input" }),
-jsxRuntimeExports.jsx("div", { className: "info-value", children: jsxRuntimeExports.jsx("pre", { children: JSON.stringify(block.input, null, 2) }) })
-            ] })
-          ] }) })
-        ]
+        callId: block.id || "N/A",
+        toolName: block.name || "unnamed",
+        toolType: isServerToolUse ? "server_tool_use" : "tool_use",
+        argumentsStr: JSON.stringify(block.input || {}),
+        index
       }
     );
   };
@@ -14425,7 +14447,7 @@ jsxRuntimeExports.jsx("summary", { className: "content-header", children: jsxRun
         index + 1
       ] }) }),
 jsxRuntimeExports.jsxs("div", { className: "content-body", children: [
-        block.thinking && jsxRuntimeExports.jsx("div", { className: "thinking-content", children: jsxRuntimeExports.jsx("div", { className: "prose", dangerouslySetInnerHTML: { __html: renderChoiceTextContent(block.thinking) } }) }),
+        block.thinking && jsxRuntimeExports.jsx("div", { className: "thinking-content", children: jsxRuntimeExports.jsx(ProseContent, { contentStr: block.thinking }) }),
         block.signature && jsxRuntimeExports.jsxs("div", { className: "signature-section", children: [
 jsxRuntimeExports.jsx("div", { className: "section-title", children: "Signature" }),
 jsxRuntimeExports.jsx("div", { className: "signature-content", children: block.signature })
@@ -14765,11 +14787,7 @@ stop_reason: event.message.stop_reason,
           viewerName = "raw";
         }
       }
-      if (viewerName === "raw" && provider.sseRenderer) {
-        await provider.sseRenderer.render(uuid, action, viewerName);
-      } else {
-        await provider.responseRenderer.render(uuid, action, viewerName);
-      }
+      await provider.responseRenderer.render(uuid, action, viewerName);
     }
   });
   function getContentType(flow) {
