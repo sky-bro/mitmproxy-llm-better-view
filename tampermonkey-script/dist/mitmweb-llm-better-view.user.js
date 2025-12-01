@@ -14269,8 +14269,21 @@ jsxRuntimeExports.jsx(ChoicesSection, { choices: response.choices, eventCount })
       return jsxRuntimeExports.jsx(ProseContent, { contentStr: content });
     } else if (Array.isArray(content)) {
       return jsxRuntimeExports.jsx("div", { "data-format": "array", children: content.map((item, idx) => {
-        const contentType = item.type || "unknown";
-        const contentTitle = item.type === "tool_use" ? `${contentType}: ${item.name || "unnamed"}` : contentType;
+        switch (item.type) {
+          case "tool_use":
+            return jsxRuntimeExports.jsx(
+              ToolCall,
+              {
+                callId: item.id || "N/A",
+                toolName: item.name || "unnamed",
+                toolType: item.type,
+                argumentsStr: JSON.stringify(item.input || {}),
+                index: idx
+              }
+            );
+          case "tool_result":
+            return jsxRuntimeExports.jsx(ToolResult, { title: `${item.type} #${idx + 1}`, toolUseId: item.tool_use_id || "N/A", children: item.content && jsxRuntimeExports.jsx(MessageContent, { content: item.content }) });
+        }
         let contentElement;
         switch (item.type) {
           case "text":
@@ -14300,28 +14313,13 @@ jsxRuntimeExports.jsx(ChoicesSection, { choices: response.choices, eventCount })
               }
             ) });
             break;
-          case "tool_use":
-            contentElement = jsxRuntimeExports.jsx(
-              ToolCall,
-              {
-                callId: item.id || "N/A",
-                toolName: item.name || "unnamed",
-                toolType: item.type,
-                argumentsStr: JSON.stringify(item.input || {}),
-                index: idx
-              }
-            );
-            break;
-          case "tool_result":
-            contentElement = jsxRuntimeExports.jsx(ToolResult, { toolUseId: item.tool_use_id || "N/A", children: item.content && jsxRuntimeExports.jsx(MessageContent, { content: item.content }) });
-            break;
           case "thinking":
             contentElement = jsxRuntimeExports.jsx("div", { className: "thinking-content", children: jsxRuntimeExports.jsx(ProseContent, { contentStr: item.thinking }) });
             break;
           default:
             contentElement = jsxRuntimeExports.jsx("div", { className: "json-content", children: jsxRuntimeExports.jsx("pre", { children: JSON.stringify(item, null, 2) }) });
         }
-        return jsxRuntimeExports.jsx(MessageContentBlock, { title: contentTitle, defaultOpen: false, children: contentElement }, idx);
+        return jsxRuntimeExports.jsx(MessageContentBlock, { title: `${item.type} #${idx + 1}`, defaultOpen: false, children: contentElement }, idx);
       }) });
     }
   };

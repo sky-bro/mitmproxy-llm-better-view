@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { renderChoiceTextContent } from '../../utils/textRender';
 import { AnthropicRequest, AnthropicSystemMessageContent, AnthropicMessage, AnthropicMessageContent } from '../../types/api/anthropic';
 import { ContentBlockParam, ToolChoice, ToolUnion } from '@anthropic-ai/sdk/resources';
 import BasicInfo from '../common/BasicInfo';
@@ -10,7 +9,6 @@ import Messages from '../common/Messages';
 import Message from '../common/Message';
 import ToolCall from '../common/ToolCall';
 import ToolResult from '../common/ToolResult';
-import JsonContent from '../common/JsonContent';
 import ProseContent from '../common/ProseContent';
 
 // Component to render message content specifically for Anthropic API
@@ -21,8 +19,24 @@ const MessageContent: React.FC<{ content: AnthropicMessageContent }> = ({ conten
     return (
       <div data-format="array">
         {content.map((item: ContentBlockParam, idx: number) => {
-          const contentType = item.type || 'unknown';
-          const contentTitle = item.type === 'tool_use' ? `${contentType}: ${item.name || 'unnamed'}` : contentType;
+          switch (item.type) {
+          case 'tool_use':
+            return (
+                <ToolCall
+                  callId={item.id || 'N/A'}
+                  toolName={item.name || 'unnamed'}
+                  toolType={item.type}
+                  argumentsStr={JSON.stringify(item.input || {})}
+                  index={idx}
+                />
+              ) 
+          case 'tool_result':
+            return (
+                <ToolResult title={`${item.type} #${idx + 1}`} toolUseId={item.tool_use_id || 'N/A'}>
+                  {item.content && <MessageContent content={item.content}/>}
+                </ToolResult>
+              )
+          }
 
           let contentElement;
           switch (item.type) {
@@ -58,24 +72,6 @@ const MessageContent: React.FC<{ content: AnthropicMessageContent }> = ({ conten
                 </div>
               );
               break;
-            case 'tool_use':
-              contentElement = (
-                <ToolCall
-                  callId={item.id || 'N/A'}
-                  toolName={item.name || 'unnamed'}
-                  toolType={item.type}
-                  argumentsStr={JSON.stringify(item.input || {})}
-                  index={idx}
-                />
-              );
-              break;
-            case 'tool_result':
-              contentElement = (
-                <ToolResult toolUseId={item.tool_use_id || 'N/A'}>
-                  {item.content && <MessageContent content={item.content}/>}
-                </ToolResult>
-              );
-              break;
             case 'thinking':
               contentElement = (
                 <div className="thinking-content">
@@ -90,7 +86,7 @@ const MessageContent: React.FC<{ content: AnthropicMessageContent }> = ({ conten
           }
 
           return (
-            <MessageContentBlock key={idx} title={contentTitle} defaultOpen={false}>
+            <MessageContentBlock key={idx} title={`${item.type} #${idx + 1}`} defaultOpen={false}>
               {contentElement}
             </MessageContentBlock>
           );
