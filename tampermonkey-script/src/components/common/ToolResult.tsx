@@ -20,7 +20,7 @@ const ToolResult: React.FC<ToolResultProps> = ({
   );
 
   return (
-    <Section title={titleEle} defaultOpen={true}>
+    <Section title={titleEle} defaultOpen={false}>
       {children}
     </Section>
   );

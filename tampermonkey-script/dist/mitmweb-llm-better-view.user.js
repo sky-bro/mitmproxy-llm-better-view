@@ -13760,7 +13760,7 @@ jsxRuntimeExports.jsxs("div", { className: "tool-call-id", children: [
         callId || "N/A"
       ] })
     ] });
-    return jsxRuntimeExports.jsx(Section, { title, defaultOpen: true, children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: parsedArguments }) });
+    return jsxRuntimeExports.jsx(Section, { title, defaultOpen: false, children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: parsedArguments }) });
   };
   const ToolResult = ({
     title,
@@ -13774,7 +13774,7 @@ jsxRuntimeExports.jsxs("div", { className: "tool-call-id", children: [
         toolUseId || "N/A"
       ] })
     ] });
-    return jsxRuntimeExports.jsx(Section, { title: titleEle, defaultOpen: true, children });
+    return jsxRuntimeExports.jsx(Section, { title: titleEle, defaultOpen: false, children });
   };
   const MessageContent$1 = ({ content }) => {
     if (!content) {

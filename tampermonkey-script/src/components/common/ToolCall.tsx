@@ -33,7 +33,7 @@ const ToolCall: React.FC<ToolCallProps> = ({
   );
 
   return (
-    <Section title={title} defaultOpen={true}>
+    <Section title={title} defaultOpen={false}>
       <JsonContent jsonObj={parsedArguments} />
     </Section>
   );
