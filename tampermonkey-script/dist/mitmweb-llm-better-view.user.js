@@ -13835,7 +13835,7 @@ jsxRuntimeExports.jsx(Section, { title: "refusal", defaultOpen: true, children: 
         return jsxRuntimeExports.jsx(ProseContent, { contentStr: item.text });
       case "image_url":
         return jsxRuntimeExports.jsxs("div", { className: "image-content", children: [
-jsxRuntimeExports.jsx("img", { src: item.image_url?.url, alt: "Content image", style: { maxWidth: "100%", height: "auto" } }),
+jsxRuntimeExports.jsx("img", { src: item.image_url?.url, alt: "Content image", style: { maxWidth: "400px", height: "auto" } }),
           item.image_url?.detail && jsxRuntimeExports.jsxs("small", { children: [
             "Detail: ",
             item.image_url.detail

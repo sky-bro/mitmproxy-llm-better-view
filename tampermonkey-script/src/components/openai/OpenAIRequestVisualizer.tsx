@@ -111,7 +111,7 @@ const ContentPartRenderer: React.FC<{ item: ChatCompletionContentPart | ChatComp
       return <ProseContent contentStr={item.text} />
     case 'image_url':
       return <div className="image-content">
-        <img src={item.image_url?.url} alt="Content image" style={{ maxWidth: '100%', height: 'auto' }} />
+        <img src={item.image_url?.url} alt="Content image" style={{ maxWidth: '400px', height: 'auto' }} />
         {item.image_url?.detail && <small>Detail: {item.image_url.detail}</small>}
       </div>;
     case 'input_audio':
