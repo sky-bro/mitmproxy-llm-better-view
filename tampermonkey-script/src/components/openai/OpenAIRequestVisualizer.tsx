@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { renderChoiceTextContent } from '../../utils/textRender';
 import { ChatCompletionCreateParams, ChatCompletionMessageParam, ChatCompletionMessageToolCall, ChatCompletionContentPartRefusal, ChatCompletionContentPart } from 'openai/resources';
 import BasicInfo from '../common/BasicInfo';
@@ -13,6 +13,7 @@ import JsonContent from '../common/JsonContent';
 import ProseContent from '../common/ProseContent';
 import ToolCall from '../common/ToolCall';
 import ToolResult from '../common/ToolResult';
+import ImageZoomModal from '../common/ImageZoomModal';
 
 // Type that can handle both Chat and Completion requests (as seen in MITM proxy logs)
 type OpenAIRequest = ChatCompletionCreateParams & {
@@ -22,6 +23,16 @@ type OpenAIRequest = ChatCompletionCreateParams & {
 type MessageContentType = string | Array<ChatCompletionContentPart | ChatCompletionContentPartRefusal> | null
 
 const MessageContent: React.FC<{ content?: MessageContentType }> = ({ content }) => {
+  const [zoomState, setZoomState] = useState<{[key: number]: boolean}>({});
+
+  // Function to toggle zoom state for specific items
+  const toggleZoom = (index: number) => {
+    setZoomState(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+
   if (!content) {
     return null;
   }
@@ -31,7 +42,11 @@ const MessageContent: React.FC<{ content?: MessageContentType }> = ({ content })
     return content.map((item: ChatCompletionContentPart | ChatCompletionContentPartRefusal, idx: number) => {
       return (
         <MessageContentBlock key={idx} title={item.type} defaultOpen={idx === content.length - 1}>
-          <ContentPartRenderer item={item} />
+          <ContentPartRenderer
+            item={item}
+            isZoomed={!!zoomState[idx]}
+            onZoomToggle={() => toggleZoom(idx)}
+          />
         </MessageContentBlock>
       )
     })
@@ -104,16 +119,43 @@ const RoleMessage: React.FC<{ message: ChatCompletionMessageParam }> = ({ messag
   }
 };
 
+// Define props interface
+interface ContentPartRendererProps {
+  item: ChatCompletionContentPart | ChatCompletionContentPartRefusal;
+  isZoomed?: boolean;
+  onZoomToggle?: () => void;
+}
+
 // Component to render a content part based on its type
-const ContentPartRenderer: React.FC<{ item: ChatCompletionContentPart | ChatCompletionContentPartRefusal }> = ({ item }) => {
+const ContentPartRenderer: React.FC<ContentPartRendererProps> = ({ item, isZoomed = false, onZoomToggle }) => {
   switch (item.type) {
     case 'text':
       return <ProseContent contentStr={item.text} />
     case 'image_url':
-      return <div className="image-content">
-        <img src={item.image_url?.url} alt="Content image" style={{ maxWidth: '400px', height: 'auto' }} />
-        {item.image_url?.detail && <small>Detail: {item.image_url.detail}</small>}
-      </div>;
+      return (
+        <>
+          <div className="image-content" style={{ cursor: 'zoom-in' }}>
+            <img
+              src={item.image_url?.url}
+              alt="Content image"
+              style={{ maxWidth: '400px', height: 'auto', cursor: 'zoom-in' }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onZoomToggle) onZoomToggle();
+              }}
+            />
+            {item.image_url?.detail && <small>Detail: {item.image_url.detail}</small>}
+          </div>
+          <ImageZoomModal
+            isOpen={isZoomed}
+            imageUrl={item.image_url?.url || ''}
+            altText="Content image"
+            onClose={() => {
+              if (onZoomToggle) onZoomToggle();
+            }}
+          />
+        </>
+      );
     case 'input_audio':
       return <div className="audio-content">
         <audio controls src={item.input_audio?.data} />

@@ -1133,45 +1133,31 @@ matchesHost(flow, patterns) {
     return jsxRuntime.exports;
   }
   var jsxRuntimeExports = requireJsxRuntime();
-  function createReactContainer() {
-    const container = document.createElement("div");
-    container.style.width = "100%";
-    container.style.height = "100%";
-    return container;
-  }
-  async function createDirectElement(html) {
-    let container = document.getElementById("mitmproxy-llm-better-view-container");
-    if (!container) {
+  function getOrCreateRenderTarget() {
+    let outerContainer = document.getElementById("mitmproxy-llm-better-view-container");
+    if (!outerContainer || !document.contains(outerContainer)) {
       const contentview = document.querySelector(".contentview");
       if (!contentview) {
-        console.warn("no `.contentview` element found");
-        return;
+        throw new Error("no `.contentview` element found");
       }
-      const secondChild = contentview.childNodes[1];
-      container = document.createElement("details");
-      container.toggleAttribute("open");
-      container.id = "mitmproxy-llm-better-view-container";
-      container.classList.add("llm-better-view");
-      contentview.insertBefore(container, secondChild);
+      outerContainer = document.createElement("details");
+      outerContainer.toggleAttribute("open");
+      outerContainer.id = "mitmproxy-llm-better-view-container";
+      outerContainer.classList.add("llm-better-view");
+      contentview.insertBefore(outerContainer, contentview.childNodes[1]);
     }
-    let summaryElement = Array.from(container.children).find(
-      (el) => el.tagName.toLowerCase() === "summary"
-    );
-    if (!summaryElement) {
-      summaryElement = document.createElement("summary");
-      summaryElement.textContent = "LLM Better View";
-      container.prepend(summaryElement);
+    if (!outerContainer.querySelector("summary")) {
+      const summary = document.createElement("summary");
+      summary.textContent = "LLM Better View";
+      outerContainer.prepend(summary);
     }
-    const childrenToKeep = Array.from(container.children).filter(
-      (el) => el.tagName.toLowerCase() === "summary"
-    );
-    container.innerHTML = "";
-    childrenToKeep.forEach((child) => container.appendChild(child));
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = html.trim();
-    while (tempDiv.firstChild) {
-      container.appendChild(tempDiv.firstChild);
+    let reactMount = outerContainer.querySelector("#llm-react-root");
+    if (!reactMount) {
+      reactMount = document.createElement("div");
+      reactMount.id = "llm-react-root";
+      outerContainer.appendChild(reactMount);
     }
+    return reactMount;
   }
   var client = { exports: {} };
   var reactDomClient_production = {};
@@ -1864,7 +1850,7 @@ matchesHost(flow, patterns) {
     react_production.useTransition = function() {
       return ReactSharedInternals.H.useTransition();
     };
-    react_production.version = "19.2.0";
+    react_production.version = "19.2.4";
     return react_production;
   }
   var hasRequiredReact;
@@ -2022,7 +2008,7 @@ matchesHost(flow, patterns) {
     reactDom_production.useFormStatus = function() {
       return ReactSharedInternals.H.useHostTransitionStatus();
     };
-    reactDom_production.version = "19.2.0";
+    reactDom_production.version = "19.2.4";
     return reactDom_production;
   }
   var hasRequiredReactDom;
@@ -13466,12 +13452,12 @@ matchesHost(flow, patterns) {
       }
     };
     var isomorphicReactPackageVersion$jscomp$inline_1840 = React2.version;
-    if ("19.2.0" !== isomorphicReactPackageVersion$jscomp$inline_1840)
+    if ("19.2.4" !== isomorphicReactPackageVersion$jscomp$inline_1840)
       throw Error(
         formatProdErrorMessage(
           527,
           isomorphicReactPackageVersion$jscomp$inline_1840,
-          "19.2.0"
+          "19.2.4"
         )
       );
     ReactDOMSharedInternals.findDOMNode = function(componentOrElement) {
@@ -13489,10 +13475,10 @@ matchesHost(flow, patterns) {
     };
     var internals$jscomp$inline_2347 = {
       bundleType: 0,
-      version: "19.2.0",
+      version: "19.2.4",
       rendererPackageName: "react-dom",
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0"
+      reconcilerVersion: "19.2.4"
     };
     if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
       var hook$jscomp$inline_2348 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -13559,7 +13545,7 @@ matchesHost(flow, patterns) {
       listenToAllSupportedEvents(container);
       return new ReactDOMHydrationRoot(initialChildren);
     };
-    reactDomClient_production.version = "19.2.0";
+    reactDomClient_production.version = "19.2.4";
     return reactDomClient_production;
   }
   var hasRequiredClient;
@@ -13585,24 +13571,33 @@ matchesHost(flow, patterns) {
   var clientExports = requireClient();
   var reactExports = requireReact();
   const React = getDefaultExportFromCjs(reactExports);
+  let sharedRoot = null;
+  let sharedRootMount = null;
   class BaseRenderer {
-async renderReactComponent(component, props) {
-      const container = createReactContainer();
-      const root = clientExports.createRoot(container);
+    async renderReactComponent(component, props) {
+      let mount;
+      try {
+        mount = getOrCreateRenderTarget();
+      } catch (e) {
+        console.warn(e);
+        return;
+      }
+      if (!sharedRoot || sharedRootMount !== mount) {
+        if (sharedRoot) sharedRoot.unmount();
+        sharedRoot = clientExports.createRoot(mount);
+        sharedRootMount = mount;
+      }
       await new Promise((resolve) => {
-        root.render(
+        sharedRoot.render(
 jsxRuntimeExports.jsx(React.StrictMode, { children: React.createElement(component, props) })
         );
-        setTimeout(() => {
-          resolve();
-        }, 0);
+        setTimeout(() => resolve(), 0);
       });
-      createDirectElement(container.innerHTML);
     }
-async fetchFlowData(uuid, action, viewerName = "Auto") {
+    async fetchFlowData(uuid, action, viewerName = "Auto") {
       return await getFlowData(`http://${window.location.host}/flows/${uuid}/${action}/content/${viewerName}.json`);
     }
-parseJSON(content) {
+    parseJSON(content) {
       try {
         return JSON.parse(content);
       } catch (error) {
@@ -13776,7 +13771,93 @@ jsxRuntimeExports.jsxs("div", { className: "tool-call-id", children: [
     ] });
     return jsxRuntimeExports.jsx(Section, { title: titleEle, defaultOpen: false, children });
   };
+  const ImageZoomModal = ({
+    isOpen,
+    imageUrl,
+    altText = "Zoomed image",
+    onClose
+  }) => {
+    if (!isOpen) return null;
+    return jsxRuntimeExports.jsx(
+      "div",
+      {
+        className: "image-zoom-overlay",
+        onClick: onClose,
+        style: {
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          backgroundColor: "rgba(0, 0, 0, 0.8)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 9999,
+          cursor: "zoom-out"
+        },
+        children: jsxRuntimeExports.jsxs(
+          "div",
+          {
+            style: {
+              position: "relative",
+              maxWidth: "90%",
+              maxHeight: "90%"
+            },
+            onClick: (e) => e.stopPropagation(),
+            children: [
+jsxRuntimeExports.jsx(
+                "img",
+                {
+                  src: imageUrl,
+                  alt: altText,
+                  style: {
+                    maxWidth: "100%",
+                    maxHeight: "80vh",
+                    objectFit: "contain",
+                    border: "2px solid white",
+                    borderRadius: "4px",
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.5)"
+                  }
+                }
+              ),
+jsxRuntimeExports.jsx(
+                "button",
+                {
+                  onClick: onClose,
+                  style: {
+                    position: "absolute",
+                    top: "-40px",
+                    right: "0",
+                    background: "white",
+                    border: "none",
+                    borderRadius: "50%",
+                    width: "30px",
+                    height: "30px",
+                    fontSize: "18px",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  },
+                  "aria-label": "Close zoom",
+                  children: "×"
+                }
+              )
+            ]
+          }
+        )
+      }
+    );
+  };
   const MessageContent$1 = ({ content }) => {
+    const [zoomState, setZoomState] = reactExports.useState({});
+    const toggleZoom = (index) => {
+      setZoomState((prev) => ({
+        ...prev,
+        [index]: !prev[index]
+      }));
+    };
     if (!content) {
       return null;
     }
@@ -13784,7 +13865,14 @@ jsxRuntimeExports.jsxs("div", { className: "tool-call-id", children: [
       return jsxRuntimeExports.jsx(ProseContent, { contentStr: content });
     } else if (Array.isArray(content)) {
       return content.map((item, idx) => {
-        return jsxRuntimeExports.jsx(MessageContentBlock, { title: item.type, defaultOpen: idx === content.length - 1, children: jsxRuntimeExports.jsx(ContentPartRenderer, { item }) }, idx);
+        return jsxRuntimeExports.jsx(MessageContentBlock, { title: item.type, defaultOpen: idx === content.length - 1, children: jsxRuntimeExports.jsx(
+          ContentPartRenderer,
+          {
+            item,
+            isZoomed: !!zoomState[idx],
+            onZoomToggle: () => toggleZoom(idx)
+          }
+        ) }, idx);
       });
     }
   };
@@ -13829,17 +13917,41 @@ jsxRuntimeExports.jsx(Section, { title: "refusal", defaultOpen: true, children: 
         return jsxRuntimeExports.jsx(MessageContent$1, { content: message.content });
     }
   };
-  const ContentPartRenderer = ({ item }) => {
+  const ContentPartRenderer = ({ item, isZoomed = false, onZoomToggle }) => {
     switch (item.type) {
       case "text":
         return jsxRuntimeExports.jsx(ProseContent, { contentStr: item.text });
       case "image_url":
-        return jsxRuntimeExports.jsxs("div", { className: "image-content", children: [
-jsxRuntimeExports.jsx("img", { src: item.image_url?.url, alt: "Content image", style: { maxWidth: "400px", height: "auto" } }),
-          item.image_url?.detail && jsxRuntimeExports.jsxs("small", { children: [
-            "Detail: ",
-            item.image_url.detail
-          ] })
+        return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+jsxRuntimeExports.jsxs("div", { className: "image-content", style: { cursor: "zoom-in" }, children: [
+jsxRuntimeExports.jsx(
+              "img",
+              {
+                src: item.image_url?.url,
+                alt: "Content image",
+                style: { maxWidth: "400px", height: "auto", cursor: "zoom-in" },
+                onClick: (e) => {
+                  e.stopPropagation();
+                  if (onZoomToggle) onZoomToggle();
+                }
+              }
+            ),
+            item.image_url?.detail && jsxRuntimeExports.jsxs("small", { children: [
+              "Detail: ",
+              item.image_url.detail
+            ] })
+          ] }),
+jsxRuntimeExports.jsx(
+            ImageZoomModal,
+            {
+              isOpen: isZoomed,
+              imageUrl: item.image_url?.url || "",
+              altText: "Content image",
+              onClose: () => {
+                if (onZoomToggle) onZoomToggle();
+              }
+            }
+          )
         ] });
       case "input_audio":
         return jsxRuntimeExports.jsxs("div", { className: "audio-content", children: [
@@ -14265,10 +14377,17 @@ jsxRuntimeExports.jsx(ChoicesSection, { choices: response.choices, eventCount })
     }
   }
   const MessageContent = ({ content }) => {
+    const [zoomState, setZoomState] = reactExports.useState({});
     if (typeof content === "string") {
       return jsxRuntimeExports.jsx(ProseContent, { contentStr: content });
     } else if (Array.isArray(content)) {
       return jsxRuntimeExports.jsx("div", { "data-format": "array", children: content.map((item, idx) => {
+        const toggleZoom = (index) => {
+          setZoomState((prev) => ({
+            ...prev,
+            [index]: !prev[index]
+          }));
+        };
         switch (item.type) {
           case "tool_use":
             return jsxRuntimeExports.jsx(
@@ -14279,10 +14398,11 @@ jsxRuntimeExports.jsx(ChoicesSection, { choices: response.choices, eventCount })
                 toolType: item.type,
                 argumentsStr: JSON.stringify(item.input || {}),
                 index: idx
-              }
+              },
+              idx
             );
           case "tool_result":
-            return jsxRuntimeExports.jsx(ToolResult, { title: `${item.type} #${idx + 1}`, toolUseId: item.tool_use_id || "N/A", children: item.content && jsxRuntimeExports.jsx(MessageContent, { content: item.content }) });
+            return jsxRuntimeExports.jsx(ToolResult, { title: `${item.type} #${idx + 1}`, toolUseId: item.tool_use_id || "N/A", children: item.content && jsxRuntimeExports.jsx(MessageContent, { content: item.content }) }, idx);
         }
         let contentElement;
         switch (item.type) {
@@ -14304,14 +14424,29 @@ jsxRuntimeExports.jsx(ChoicesSection, { choices: response.choices, eventCount })
                   break;
               }
             }
-            contentElement = jsxRuntimeExports.jsx("div", { className: "image-content", children: jsxRuntimeExports.jsx(
-              "img",
-              {
-                src: imageUrl,
-                alt: "Embedded image",
-                style: { maxWidth: "400px", height: "auto", border: "1px solid #ccc", borderRadius: "4px" }
-              }
-            ) });
+            contentElement = jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+jsxRuntimeExports.jsx("div", { className: "image-content", style: { cursor: "zoom-in" }, children: jsxRuntimeExports.jsx(
+                "img",
+                {
+                  src: imageUrl,
+                  alt: "Embedded image",
+                  style: { maxWidth: "400px", height: "auto", border: "1px solid #ccc", borderRadius: "4px", cursor: "zoom-in" },
+                  onClick: (e) => {
+                    e.stopPropagation();
+                    toggleZoom(idx);
+                  }
+                }
+              ) }),
+jsxRuntimeExports.jsx(
+                ImageZoomModal,
+                {
+                  isOpen: !!zoomState[idx],
+                  imageUrl,
+                  altText: "Embedded image",
+                  onClose: () => toggleZoom(idx)
+                }
+              )
+            ] });
             break;
           case "thinking":
             contentElement = jsxRuntimeExports.jsx("div", { className: "thinking-content", children: jsxRuntimeExports.jsx(ProseContent, { contentStr: item.thinking }) });

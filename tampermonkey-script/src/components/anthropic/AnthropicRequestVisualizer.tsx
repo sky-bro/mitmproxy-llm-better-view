@@ -10,29 +10,41 @@ import Message from '../common/Message';
 import ToolCall from '../common/ToolCall';
 import ToolResult from '../common/ToolResult';
 import ProseContent from '../common/ProseContent';
+import ImageZoomModal from '../common/ImageZoomModal';
 
 // Component to render message content specifically for Anthropic API
 const MessageContent: React.FC<{ content: AnthropicMessageContent }> = ({ content }) => {
+  const [zoomState, setZoomState] = useState<{[key: number]: boolean}>({});
+
   if (typeof content === "string") {
     return <ProseContent contentStr={content} />;
   } else if (Array.isArray(content)) {
     return (
       <div data-format="array">
         {content.map((item: ContentBlockParam, idx: number) => {
+          // Handle zoom state for this specific item
+          const toggleZoom = (index: number) => {
+            setZoomState(prev => ({
+              ...prev,
+              [index]: !prev[index]
+            }));
+          };
+
           switch (item.type) {
           case 'tool_use':
             return (
                 <ToolCall
+                  key={idx}
                   callId={item.id || 'N/A'}
                   toolName={item.name || 'unnamed'}
                   toolType={item.type}
                   argumentsStr={JSON.stringify(item.input || {})}
                   index={idx}
                 />
-              ) 
+              )
           case 'tool_result':
             return (
-                <ToolResult title={`${item.type} #${idx + 1}`} toolUseId={item.tool_use_id || 'N/A'}>
+                <ToolResult key={idx} title={`${item.type} #${idx + 1}`} toolUseId={item.tool_use_id || 'N/A'}>
                   {item.content && <MessageContent content={item.content}/>}
                 </ToolResult>
               )
@@ -63,13 +75,25 @@ const MessageContent: React.FC<{ content: AnthropicMessageContent }> = ({ conten
               }
 
               contentElement = (
-                <div className="image-content">
+                <>
+                <div className="image-content" style={{ cursor: 'zoom-in' }}>
                     <img
                       src={imageUrl}
                       alt="Embedded image"
-                      style={{ maxWidth: '400px', height: 'auto', border: '1px solid #ccc', borderRadius: '4px' }}
+                      style={{ maxWidth: '400px', height: 'auto', border: '1px solid #ccc', borderRadius: '4px', cursor: 'zoom-in' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleZoom(idx);
+                      }}
                     />
                 </div>
+                <ImageZoomModal
+                  isOpen={!!zoomState[idx]}
+                  imageUrl={imageUrl}
+                  altText="Embedded image"
+                  onClose={() => toggleZoom(idx)}
+                />
+                </>
               );
               break;
             case 'thinking':
