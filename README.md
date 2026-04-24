@@ -1,7 +1,7 @@
 # Better view request body and response body of LLM API (openai completion) in mitmproxy
 
 ![compare](./docs/compare-1.png)
-![](https://raw.githubusercontent.com/slow-groovin/mitmproxy-llm-better-view/refs/heads/main/docs/mitm-better-view.webp)
+![](https://raw.githubusercontent.com/sky-bro/mitmproxy-llm-better-view/refs/heads/main/docs/mitm-better-view.webp)
 
 [中文文档](README_CN.md)
 
@@ -13,7 +13,7 @@ This project provides two tools (**You can use both of them**):
 ### Method 1: mitmproxy addon scripts
 
 ```bash
-git clone https://github.com/slow-groovin/mitmproxy-llm-better-view.git
+git clone https://github.com/sky-bro/mitmproxy-llm-better-view.git
 ```
 
 Add persistent configuration in `~/.mitmproxy/config.yaml`:
@@ -33,6 +33,55 @@ scripts:
 
 1. make sure you have tampermonkey extension installed in your browser
 2. install the tampermonkey script by opening [mitmweb-llm-better-view.user.js](https://raw.githubusercontent.com/sky-bro/mitmproxy-llm-better-view/refs/heads/main/tampermonkey-script/dist/mitmweb-llm-better-view.user.js)
+
+## Development
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v18+)
+- npm
+
+### Setup
+
+```bash
+git clone https://github.com/sky-bro/mitmproxy-llm-better-view.git
+cd mitmproxy-llm-better-view/tampermonkey-script
+npm install
+```
+
+### Dev Mode
+
+Start the dev server (uses [vite-plugin-monkey](https://github.com/lisonge/vite-plugin-monkey)):
+
+```bash
+npm run dev
+```
+
+This launches a local dev server. Visit the printed URL in your browser — Tampermonkey will prompt you to install a development version of the script that auto-reloads on code changes.
+
+The script targets `http://localhost:8081/*` (default mitmweb port). Make sure mitmweb is running before testing.
+
+### Build
+
+```bash
+npm run build
+```
+
+The compiled userscript is output to `dist/mitmweb-llm-better-view.user.js`.
+
+### Project Structure
+
+```text
+tampermonkey-script/
+├── src/
+│   ├── main.tsx                     # entry point
+│   └── components/
+│       ├── openai/                  # OpenAI API visualizers
+│       └── anthropic/               # Anthropic API visualizers
+├── dist/
+│   └── mitmweb-llm-better-view.user.js  # built userscript
+└── vite.config.ts                   # build config (vite-plugin-monkey)
+```
 
 ## How It Works
 ### Method 1: mitmproxy addon scripts

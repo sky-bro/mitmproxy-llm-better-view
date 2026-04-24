@@ -9,6 +9,7 @@ export class OpenAIDetector extends BaseDetector {
     const openAIPatterns = [
       '/completions',
       '/chat/completions',
+      '/responses',
       '/embeddings',
       '/audio/transcriptions'
     ];

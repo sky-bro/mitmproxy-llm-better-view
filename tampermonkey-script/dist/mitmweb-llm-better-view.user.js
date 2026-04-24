@@ -382,6 +382,36 @@ details[open].llm-better-view summary {
   color: #c2410c;
 }
 
+.llm-better-view .role-response-item {
+  background: #ecfeff;
+  color: #0f766e;
+}
+
+.llm-better-view .role-reasoning {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.llm-better-view .role-call-output {
+  background: #f0f9ff;
+  color: #0369a1;
+}
+
+.llm-better-view .role-search-call {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.llm-better-view .role-mcp {
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.llm-better-view .role-system-call {
+  background: #f8fafc;
+  color: #475569;
+}
+
 /* Role-specific content styling */
 .llm-better-view .system-message {
   background: #fefce8; /* Light yellow background */
@@ -1028,6 +1058,65 @@ details[open].llm-better-view summary {
   max-width: 100%;
   word-break: break-word; /* Handle long anthropic content */
 }
+
+/* ── OpenAI Responses View Tweaks ──────────────────────────────── */
+.llm-better-view .responses-view {
+  font-size: 1.5rem;
+}
+
+.llm-better-view .responses-view .section {
+  background: #fdfefe;
+  border-color: #dbe4ef;
+}
+
+.llm-better-view .responses-view .section-header {
+  background: #f7fafc;
+}
+
+.llm-better-view .responses-view .section-header:hover {
+  background: #f1f5f9;
+}
+
+.llm-better-view .responses-view .section-content,
+.llm-better-view .responses-view .message-content,
+.llm-better-view .responses-view .tool-content,
+.llm-better-view .responses-view .prose,
+.llm-better-view .responses-view .info-label,
+.llm-better-view .responses-view .info-value {
+  font-size: 1.5rem;
+}
+
+.llm-better-view .responses-view .json-content {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  font-size: 1.3rem;
+}
+
+.llm-better-view .responses-view .choice-badge {
+  background: #0f766e;
+}
+
+.llm-better-view .responses-view .event-badge {
+  background: #0369a1;
+}
+
+.llm-better-view .responses-view .responses-item-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.llm-better-view .responses-view .responses-status-badge {
+  background: #e0f2fe;
+  color: #075985;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1;
+  border: 1px solid #bae6fd;
+}
+
 `;
   };
   class APIProviderRegistry {
@@ -1084,6 +1173,7 @@ matchesHost(flow, patterns) {
       const openAIPatterns = [
         "/completions",
         "/chat/completions",
+        "/responses",
         "/embeddings",
         "/audio/transcriptions"
       ];
@@ -14012,6 +14102,516 @@ jsxRuntimeExports.jsx(Messages, { title: "Messages", count: obj.messages?.length
 jsxRuntimeExports.jsx(Tools, { title: "Tools", count: obj.tools?.length, defaultOpen: false, children: obj.tools?.map((tool, index) => jsxRuntimeExports.jsx(ToolItem$1, { tool, index }, index)) })
     ] });
   };
+  function asRecord$1(value) {
+    if (!value || typeof value !== "object") return {};
+    return value;
+  }
+  function hasValue(value) {
+    return value !== void 0 && value !== null && value !== "";
+  }
+  function isPrimitive(value) {
+    const t = typeof value;
+    return t === "string" || t === "number" || t === "boolean";
+  }
+  function hasStructuredContent(value) {
+    if (Array.isArray(value)) return value.length > 0;
+    if (value && typeof value === "object") return Object.keys(value).length > 0;
+    return false;
+  }
+  function parseMaybeJson$1(str) {
+    if (typeof str !== "string") return str;
+    try {
+      return JSON.parse(str);
+    } catch {
+      return str;
+    }
+  }
+  function getItemBadgeClass$1(type) {
+    if (type === "reasoning") return "role-reasoning";
+    if (type === "function_call" || type === "custom_tool_call" || type === "function_shell_call") return "role-function";
+    if (type.endsWith("_output")) return "role-call-output";
+    if (type === "file_search_call" || type === "web_search_call" || type === "tool_search_call") return "role-search-call";
+    if (type.startsWith("mcp_")) return "role-mcp";
+    if (type === "computer_call" || type === "code_interpreter_call" || type === "local_shell_call" || type === "apply_patch_call" || type === "image_generation_call" || type === "compaction") return "role-system-call";
+    return "role-response-item";
+  }
+  function renderItemHeader$1(label, index, status) {
+    return jsxRuntimeExports.jsxs("div", { className: "flex-container responses-item-header", children: [
+jsxRuntimeExports.jsx("span", { className: `role-badge ${getItemBadgeClass$1(label)}`, children: label }),
+      status && jsxRuntimeExports.jsx("span", { className: "responses-status-badge", children: status }),
+jsxRuntimeExports.jsxs("span", { className: "text-small", children: [
+        "#",
+        index + 1
+      ] })
+    ] });
+  }
+  function renderInputContent(content, index, isOpenByDefault) {
+    const obj = asRecord$1(content);
+    const type = obj.type;
+    if (type === "input_text") {
+      return jsxRuntimeExports.jsx(Section, { title: `input_text #${index + 1}`, defaultOpen: isOpenByDefault, children: jsxRuntimeExports.jsx(ProseContent, { contentStr: obj.text }) }, index);
+    }
+    if (type === "input_image") {
+      return jsxRuntimeExports.jsx(Section, { title: `input_image #${index + 1}`, defaultOpen: isOpenByDefault, children: jsxRuntimeExports.jsx(
+        JsonContent,
+        {
+          jsonObj: {
+            image_url: obj.image_url,
+            file_id: obj.file_id,
+            detail: obj.detail
+          }
+        }
+      ) }, index);
+    }
+    if (type === "input_file") {
+      return jsxRuntimeExports.jsx(Section, { title: `input_file #${index + 1}`, defaultOpen: isOpenByDefault, children: jsxRuntimeExports.jsx(
+        JsonContent,
+        {
+          jsonObj: {
+            file_id: obj.file_id,
+            filename: obj.filename,
+            file_url: obj.file_url,
+            detail: obj.detail,
+            file_data: obj.file_data
+          }
+        }
+      ) }, index);
+    }
+    return jsxRuntimeExports.jsx(Section, { title: `${type || "input_part"} #${index + 1}`, defaultOpen: isOpenByDefault, children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: content }) }, index);
+  }
+  function renderMessageLikeItem(item, index, isOpenByDefault) {
+    const obj = asRecord$1(item);
+    const role = obj.role || "unknown";
+    const content = obj.content;
+    if (typeof content === "string") {
+      return jsxRuntimeExports.jsx(Message, { role, index, open: isOpenByDefault, children: jsxRuntimeExports.jsx(ProseContent, { contentStr: content }) }, index);
+    }
+    if (Array.isArray(content)) {
+      return jsxRuntimeExports.jsx(Message, { role, index, open: isOpenByDefault, children: content.map(
+        (part, partIndex) => renderInputContent(
+          part,
+          partIndex,
+          partIndex === content.length - 1
+        )
+      ) }, index);
+    }
+    return jsxRuntimeExports.jsx(Message, { role, index, open: isOpenByDefault, children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: item }) }, index);
+  }
+  function renderToolOutput(output) {
+    if (typeof output === "string") {
+      return jsxRuntimeExports.jsx(Section, { title: "Output", defaultOpen: true, children: jsxRuntimeExports.jsx(ProseContent, { contentStr: output }) });
+    }
+    if (Array.isArray(output)) {
+      return jsxRuntimeExports.jsx(Section, { title: "Output", defaultOpen: true, children: output.map(
+        (part, partIndex) => renderInputContent(
+          part,
+          partIndex,
+          partIndex === output.length - 1
+        )
+      ) });
+    }
+    if (output === void 0) {
+      return jsxRuntimeExports.jsx(Section, { title: "Output", defaultOpen: true, children: jsxRuntimeExports.jsx("div", { className: "empty-state", children: "No output" }) });
+    }
+    return jsxRuntimeExports.jsx(Section, { title: "Output", defaultOpen: true, children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: output }) });
+  }
+  function renderFunctionCallLikeItem(item, index, isOpenByDefault) {
+    const obj = asRecord$1(item);
+    return jsxRuntimeExports.jsxs(
+      Section,
+      {
+        title: renderItemHeader$1("function_call", index, obj.status),
+        defaultOpen: isOpenByDefault,
+        children: [
+jsxRuntimeExports.jsxs(BasicInfo, { title: "Function Call", children: [
+jsxRuntimeExports.jsx(InfoItem, { label: "Name", value: obj.name }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Namespace", value: obj.namespace }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Call ID", value: obj.call_id }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Status", value: obj.status })
+          ] }),
+jsxRuntimeExports.jsx(Section, { title: "Arguments", defaultOpen: true, children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: parseMaybeJson$1(obj.arguments) }) })
+        ]
+      },
+      index
+    );
+  }
+  function renderReasoningLikeItem(item, index, isOpenByDefault) {
+    const obj = asRecord$1(item);
+    const summary = Array.isArray(obj.summary) ? obj.summary : [];
+    const content = Array.isArray(obj.content) ? obj.content : [];
+    return jsxRuntimeExports.jsxs(
+      Section,
+      {
+        title: renderItemHeader$1("reasoning", index),
+        defaultOpen: isOpenByDefault,
+        children: [
+jsxRuntimeExports.jsxs(BasicInfo, { title: "Reasoning", children: [
+jsxRuntimeExports.jsx(InfoItem, { label: "ID", value: obj.id }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Encrypted Content", value: obj.encrypted_content })
+          ] }),
+jsxRuntimeExports.jsx(Section, { title: `Summary (${summary.length})`, defaultOpen: true, children: summary.length ? summary.map((part, i) => jsxRuntimeExports.jsx(Section, { title: `summary #${i + 1}`, defaultOpen: i === summary.length - 1, children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: part }) }, i)) : jsxRuntimeExports.jsx("div", { className: "empty-state", children: "No summary" }) }),
+jsxRuntimeExports.jsx(Section, { title: `Content (${content.length})`, defaultOpen: false, children: content.length ? jsxRuntimeExports.jsx(JsonContent, { jsonObj: content }) : jsxRuntimeExports.jsx("div", { className: "empty-state", children: "No content" }) })
+        ]
+      },
+      index
+    );
+  }
+  function renderGenericCallItem(item, index, type, isOpenByDefault) {
+    const obj = asRecord$1(item);
+    return jsxRuntimeExports.jsxs(
+      Section,
+      {
+        title: renderItemHeader$1(type, index, obj.status),
+        defaultOpen: isOpenByDefault,
+        children: [
+jsxRuntimeExports.jsxs(BasicInfo, { title: "Call Info", children: [
+jsxRuntimeExports.jsx(InfoItem, { label: "ID", value: obj.id }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Call ID", value: obj.call_id }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Name", value: obj.name }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Status", value: obj.status })
+          ] }),
+jsxRuntimeExports.jsx(JsonContent, { jsonObj: item })
+        ]
+      },
+      index
+    );
+  }
+  function renderInputItem(item, index, isOpenByDefault) {
+    const obj = asRecord$1(item);
+    const type = obj.type;
+    if (obj.role || type === "message") {
+      return renderMessageLikeItem(item, index, isOpenByDefault);
+    }
+    if (type === "function_call") {
+      return renderFunctionCallLikeItem(item, index, isOpenByDefault);
+    }
+    if (type === "reasoning") {
+      return renderReasoningLikeItem(item, index, isOpenByDefault);
+    }
+    if (type === "function_call_output" || type === "custom_tool_call_output") {
+      return jsxRuntimeExports.jsxs(
+        Section,
+        {
+          title: renderItemHeader$1(type, index, obj.status),
+          defaultOpen: isOpenByDefault,
+          children: [
+jsxRuntimeExports.jsxs(BasicInfo, { title: "Tool Output Info", children: [
+jsxRuntimeExports.jsx(InfoItem, { label: "Type", value: type }),
+jsxRuntimeExports.jsx(InfoItem, { label: "ID", value: obj.id }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Call ID", value: obj.call_id }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Status", value: obj.status })
+            ] }),
+            renderToolOutput(obj.output)
+          ]
+        },
+        index
+      );
+    }
+    if (type === "file_search_call" || type === "web_search_call" || type === "tool_search_call" || type === "computer_call" || type === "code_interpreter_call" || type === "image_generation_call" || type === "local_shell_call" || type === "function_shell_call" || type === "apply_patch_call" || type === "mcp_call" || type === "mcp_list_tools" || type === "mcp_approval_request" || type === "mcp_approval_response" || type === "custom_tool_call") {
+      return renderGenericCallItem(item, index, type, isOpenByDefault);
+    }
+    return jsxRuntimeExports.jsx(
+      Section,
+      {
+        title: renderItemHeader$1(type || "input_item", index, obj.status),
+        defaultOpen: isOpenByDefault,
+        children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: item })
+      },
+      index
+    );
+  }
+  function renderInput(input) {
+    if (input === void 0 || input === null) {
+      return jsxRuntimeExports.jsx("div", { className: "empty-state", children: "No input" });
+    }
+    if (typeof input === "string") {
+      return jsxRuntimeExports.jsx(ProseContent, { contentStr: input });
+    }
+    if (!Array.isArray(input)) {
+      return jsxRuntimeExports.jsx(JsonContent, { jsonObj: input });
+    }
+    if (!input.length) {
+      return jsxRuntimeExports.jsx("div", { className: "empty-state", children: "Input is empty" });
+    }
+    return input.map(
+      (item, index) => renderInputItem(item, index, index === input.length - 1)
+    );
+  }
+  function getInputStats(input) {
+    if (!Array.isArray(input)) {
+      return { messageCount: 0, itemCount: 0 };
+    }
+    let messageCount = 0;
+    for (const item of input) {
+      const obj = asRecord$1(item);
+      if (obj.role || obj.type === "message") {
+        messageCount += 1;
+      }
+    }
+    return { messageCount, itemCount: input.length };
+  }
+  function renderToolDefinition(tool, index) {
+    const obj = asRecord$1(tool);
+    const type = String(obj.type || "unknown");
+    const builtInToolDescriptions = {
+      file_search: "Built-in file search tool",
+      web_search: "Built-in web search tool",
+      web_search_preview: "Built-in web search preview tool",
+      tool_search: "Built-in tool search tool",
+      computer: "Built-in computer tool",
+      computer_use_preview: "Built-in computer-use preview tool",
+      code_interpreter: "Built-in code interpreter tool",
+      image_generation: "Built-in image generation tool",
+      local_shell: "Built-in local shell tool",
+      shell: "Built-in shell tool",
+      apply_patch: "Built-in apply patch tool",
+      mcp: "MCP tool",
+      namespace: "Tool namespace"
+    };
+    if (type === "function") {
+      const fn = asRecord$1(obj.function);
+      const name = obj.name || fn.name || `function_${index + 1}`;
+      const description = obj.description ?? fn.description;
+      const strict = obj.strict ?? fn.strict;
+      const parameters = obj.parameters ?? fn.parameters;
+      const inputSchema2 = parameters && typeof parameters === "object" ? { ...parameters, strict } : { note: "No parameter schema provided", strict };
+      return jsxRuntimeExports.jsx(
+        Tool,
+        {
+          index,
+          tool: {
+            name,
+            description,
+            input_schema: inputSchema2
+          }
+        },
+        index
+      );
+    }
+    if (type === "custom") {
+      const name = obj.name || `custom_${index + 1}`;
+      const description = obj.description || "Custom tool";
+      const format = asRecord$1(obj.format);
+      const jsonSchema = asRecord$1(format.json_schema);
+      const inputSchema2 = Object.keys(jsonSchema).length ? jsonSchema : Object.keys(format).length ? format : { note: "No custom format schema provided" };
+      return jsxRuntimeExports.jsx(
+        Tool,
+        {
+          index,
+          tool: {
+            name,
+            description,
+            input_schema: inputSchema2
+          }
+        },
+        index
+      );
+    }
+    const configEntries = Object.entries(obj).filter(([k, v]) => k !== "type" && v !== void 0);
+    const inputSchema = configEntries.length > 0 ? Object.fromEntries(configEntries) : { note: "No configurable parameters" };
+    return jsxRuntimeExports.jsx(
+      Tool,
+      {
+        index,
+        tool: {
+          name: obj.name || type,
+          description: builtInToolDescriptions[type] || `${type} tool`,
+          input_schema: inputSchema
+        }
+      },
+      index
+    );
+  }
+  const OpenAIResponsesRequestVisualizer = ({ request }) => {
+    const req = request;
+    const tools = Array.isArray(req.tools) ? req.tools : [];
+    const inputValue = req.input;
+    const inputStats = getInputStats(inputValue);
+    const inputTitle = inputStats.messageCount > 0 ? `Input (${inputStats.messageCount} messages)` : inputStats.itemCount > 0 ? `Input (${inputStats.itemCount} items)` : "Input";
+    const hasTextConfig = hasValue(req.text);
+    const hasResponseFormat = hasValue(req.response_format);
+    const hasMetadata = hasStructuredContent(req.metadata);
+    const toolChoicePrimitive = isPrimitive(req.tool_choice) ? req.tool_choice : void 0;
+    const textConfigPrimitive = isPrimitive(req.text) ? req.text : void 0;
+    const responseFormatPrimitive = isPrimitive(req.response_format) ? req.response_format : void 0;
+    const metadataPrimitive = isPrimitive(req.metadata) ? req.metadata : void 0;
+    return jsxRuntimeExports.jsxs("div", { className: "container responses-view", children: [
+jsxRuntimeExports.jsx("div", { className: "header", children: jsxRuntimeExports.jsx("h1", { children: "OpenAI Responses API Request" }) }),
+jsxRuntimeExports.jsxs(BasicInfo, { children: [
+jsxRuntimeExports.jsx(InfoItem, { label: "Model", value: req.model }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Stream", value: req.stream }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Store", value: req.store }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Background", value: req.background }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Temperature", value: req.temperature }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Top P", value: req.top_p }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Max Output Tokens", value: req.max_output_tokens }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Previous Response ID", value: req.previous_response_id }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Parallel Tool Calls", value: req.parallel_tool_calls }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Tool Choice", value: toolChoicePrimitive }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Text Config", value: textConfigPrimitive }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Response Format", value: responseFormatPrimitive }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Metadata", value: metadataPrimitive })
+      ] }),
+jsxRuntimeExports.jsx(Section, { title: "Instructions", defaultOpen: false, children: req.instructions ? jsxRuntimeExports.jsx("pre", { className: "text-content", style: { whiteSpace: "pre-wrap", margin: 0 }, children: req.instructions }) : jsxRuntimeExports.jsx("div", { className: "empty-state", children: "No instructions" }) }),
+jsxRuntimeExports.jsx(Section, { title: inputTitle, defaultOpen: true, children: renderInput(inputValue) }),
+jsxRuntimeExports.jsx(Section, { title: `Tools (${tools.length})`, defaultOpen: false, children: tools.length ? tools.map((tool, index) => renderToolDefinition(tool, index)) : jsxRuntimeExports.jsx("div", { className: "empty-state", children: "No tools" }) }),
+      toolChoicePrimitive === void 0 && hasValue(req.tool_choice) && jsxRuntimeExports.jsx(Section, { title: "Tool Choice", defaultOpen: false, children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: req.tool_choice }) }),
+      textConfigPrimitive === void 0 && hasTextConfig && jsxRuntimeExports.jsx(Section, { title: "Response Text Config", defaultOpen: false, children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: req.text }) }),
+      responseFormatPrimitive === void 0 && hasResponseFormat && jsxRuntimeExports.jsx(Section, { title: "Response Format", defaultOpen: false, children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: req.response_format }) }),
+      metadataPrimitive === void 0 && hasMetadata && jsxRuntimeExports.jsx(Section, { title: "Metadata", defaultOpen: false, children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: req.metadata }) })
+    ] });
+  };
+  function isResponsesRequest(obj) {
+    if (!obj || typeof obj !== "object") return false;
+    return !!obj.model && (obj.input !== void 0 || obj.instructions !== void 0);
+  }
+  function isResponsesResponse(obj) {
+    if (!obj || typeof obj !== "object") return false;
+    if (obj.object === "response") return true;
+    return Array.isArray(obj.output) && !!obj.model;
+  }
+  function parseResponsesSSEEvents(raw) {
+    const events = [];
+    raw.split("\n").forEach((line) => {
+      const trimmed = line.trim();
+      if (!trimmed) return;
+      if (trimmed.startsWith("data:")) {
+        const dataContent = trimmed.slice(5).trim();
+        if (!dataContent || dataContent === "[DONE]") return;
+        try {
+          events.push(JSON.parse(dataContent));
+        } catch {
+        }
+        return;
+      }
+      if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+        try {
+          events.push(JSON.parse(trimmed));
+        } catch {
+        }
+      }
+    });
+    return events;
+  }
+  function normalizeFromResponseEnvelope(event) {
+    if (!event || typeof event !== "object") return null;
+    if (event.response && isResponsesResponse(event.response)) {
+      return event.response;
+    }
+    if (isResponsesResponse(event)) {
+      return event;
+    }
+    return null;
+  }
+  function processResponsesSSEEvents(events) {
+    if (!events.length) return null;
+    for (let i = events.length - 1; i >= 0; i -= 1) {
+      const maybe = normalizeFromResponseEnvelope(events[i]);
+      if (maybe) return maybe;
+    }
+    const outputByKey = new Map();
+    const outputOrder = [];
+    let base = {
+      object: "response",
+      output: []
+    };
+    const ensureItem = (key, initial) => {
+      if (!outputByKey.has(key)) {
+        outputByKey.set(key, initial);
+        outputOrder.push(key);
+      }
+      return outputByKey.get(key);
+    };
+    for (const event of events) {
+      if (!event || typeof event !== "object") continue;
+      const t = String(event.type || "");
+      const maybeResp = event.response;
+      if (maybeResp && typeof maybeResp === "object") {
+        base = {
+          ...base,
+          id: maybeResp.id ?? base.id,
+          model: maybeResp.model ?? base.model,
+          status: maybeResp.status ?? base.status,
+          created_at: maybeResp.created_at ?? base.created_at,
+          usage: maybeResp.usage ?? base.usage
+        };
+      }
+      if (t.endsWith("output_item.added")) {
+        const item = event.item;
+        if (!item) continue;
+        const key = item.id || `index:${event.output_index ?? outputOrder.length}`;
+        ensureItem(key, { ...item });
+        continue;
+      }
+      if (t.endsWith("content_part.added")) {
+        const itemId = event.item_id || `index:${event.output_index ?? 0}`;
+        const item = ensureItem(itemId, {
+          id: event.item_id,
+          type: "message",
+          role: "assistant",
+          content: []
+        });
+        if (!Array.isArray(item.content)) item.content = [];
+        item.content.push(event.part || event.content_part || {});
+        continue;
+      }
+      if (t.endsWith("output_text.delta")) {
+        const itemId = event.item_id || `index:${event.output_index ?? 0}`;
+        const item = ensureItem(itemId, {
+          id: event.item_id,
+          type: "message",
+          role: "assistant",
+          content: [{ type: "output_text", text: "" }]
+        });
+        if (!Array.isArray(item.content) || !item.content.length) {
+          item.content = [{ type: "output_text", text: "" }];
+        }
+        let target = item.content[item.content.length - 1];
+        if (!target || target.type !== "output_text") {
+          target = { type: "output_text", text: "" };
+          item.content.push(target);
+        }
+        target.text = `${target.text || ""}${event.delta || ""}`;
+        continue;
+      }
+      if (t.endsWith("function_call_arguments.delta")) {
+        const itemId = event.item_id || event.call_id || `index:${event.output_index ?? 0}`;
+        const item = ensureItem(itemId, {
+          id: event.item_id,
+          type: "function_call",
+          call_id: event.call_id,
+          name: event.name,
+          arguments: ""
+        });
+        item.type = "function_call";
+        item.call_id = item.call_id || event.call_id;
+        item.name = item.name || event.name;
+        item.arguments = `${item.arguments || ""}${event.delta || ""}`;
+        continue;
+      }
+      if (t.endsWith("output_item.done")) {
+        const doneItem = event.item;
+        if (!doneItem) continue;
+        const key = doneItem.id || `index:${event.output_index ?? outputOrder.length}`;
+        outputByKey.set(key, { ...outputByKey.get(key) || {}, ...doneItem });
+        if (!outputOrder.includes(key)) outputOrder.push(key);
+        continue;
+      }
+      if (t.endsWith("completed")) {
+        const maybe = normalizeFromResponseEnvelope(event);
+        if (maybe) return maybe;
+        base.status = "completed";
+      }
+    }
+    const output = outputOrder.map((k) => outputByKey.get(k)).filter(Boolean);
+    if (!output.length && !base.id && !base.model) {
+      return null;
+    }
+    return {
+      ...base,
+      output
+    };
+  }
   function isLLMRequest(parsedObj) {
     return !!parsedObj && (!!parsedObj["messages"] || !!parsedObj["prompt"]) && !!parsedObj["model"];
   }
@@ -14031,6 +14631,10 @@ jsxRuntimeExports.jsx(Tools, { title: "Tools", count: obj.tools?.length, default
         return;
       }
       if (!isLLMRequest(parsedObj)) {
+        if (!isResponsesRequest(parsedObj)) {
+          return;
+        }
+        await this.renderReactComponent(OpenAIResponsesRequestVisualizer, { request: parsedObj });
         return;
       }
       await this.renderReactComponent(OpenAIRequestVisualizer, { obj: parsedObj });
@@ -14287,6 +14891,218 @@ jsxRuntimeExports.jsx(ChoicesSection, { choices: response.choices, eventCount })
     }
     return currentSnapshot;
   }
+  const UsageItem = ({ label, value }) => {
+    if (value === void 0 || value === null) return null;
+    return jsxRuntimeExports.jsxs("div", { className: "usage-item", children: [
+jsxRuntimeExports.jsx("div", { className: "usage-label", children: label }),
+jsxRuntimeExports.jsx("div", { className: "usage-value", children: value })
+    ] });
+  };
+  function asRecord(value) {
+    if (!value || typeof value !== "object") return {};
+    return value;
+  }
+  function parseMaybeJson(str) {
+    if (typeof str !== "string") return str;
+    try {
+      return JSON.parse(str);
+    } catch {
+      return str;
+    }
+  }
+  function getItemBadgeClass(type) {
+    if (type === "reasoning") return "role-reasoning";
+    if (type === "function_call" || type === "custom_tool_call" || type === "function_shell_call") return "role-function";
+    if (type.endsWith("_output")) return "role-call-output";
+    if (type === "file_search_call" || type === "web_search_call" || type === "tool_search_call") return "role-search-call";
+    if (type.startsWith("mcp_")) return "role-mcp";
+    if (type === "computer_call" || type === "code_interpreter_call" || type === "local_shell_call" || type === "apply_patch_call" || type === "image_generation_call" || type === "compaction") return "role-system-call";
+    return "role-response-item";
+  }
+  function renderItemHeader(label, index, status) {
+    return jsxRuntimeExports.jsxs("div", { className: "flex-container responses-item-header", children: [
+jsxRuntimeExports.jsx("span", { className: `role-badge ${getItemBadgeClass(label)}`, children: label }),
+      status && jsxRuntimeExports.jsx("span", { className: "responses-status-badge", children: status }),
+jsxRuntimeExports.jsxs("span", { className: "text-small", children: [
+        "#",
+        index + 1
+      ] })
+    ] });
+  }
+  function renderOutputMessageContent(content) {
+    if (!content.length) {
+      return jsxRuntimeExports.jsx("div", { className: "empty-state", children: "No content" });
+    }
+    return content.map((part, idx) => {
+      const obj = asRecord(part);
+      const type = obj.type || "part";
+      if (type === "output_text") {
+        const textValue = typeof obj.text === "string" ? obj.text : "";
+        if (!textValue.trim()) {
+          return null;
+        }
+        return jsxRuntimeExports.jsxs(Section, { title: `output_text #${idx + 1}`, defaultOpen: idx === content.length - 1, children: [
+jsxRuntimeExports.jsx(ProseContent, { contentStr: textValue }),
+          obj.annotations?.length ? jsxRuntimeExports.jsx(Section, { title: `Annotations (${obj.annotations.length})`, defaultOpen: false, children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: obj.annotations }) }) : null,
+          obj.logprobs?.length ? jsxRuntimeExports.jsx(Section, { title: `Logprobs (${obj.logprobs.length})`, defaultOpen: false, children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: obj.logprobs }) }) : null
+        ] }, idx);
+      }
+      if (type === "refusal") {
+        return jsxRuntimeExports.jsx(Section, { title: `refusal #${idx + 1}`, defaultOpen: true, children: jsxRuntimeExports.jsx(ProseContent, { contentStr: obj.refusal || "" }) }, idx);
+      }
+      return jsxRuntimeExports.jsx(Section, { title: `${type} #${idx + 1}`, defaultOpen: false, children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: part }) }, idx);
+    });
+  }
+  function renderFunctionCallItem(item, index) {
+    return jsxRuntimeExports.jsxs(
+      Section,
+      {
+        title: renderItemHeader("function_call", index, item.status),
+        defaultOpen: false,
+        children: [
+jsxRuntimeExports.jsx(
+            ToolCall,
+            {
+              callId: item.call_id || item.id || "N/A",
+              toolName: item.name || "unknown",
+              toolType: "function",
+              argumentsStr: typeof item.arguments === "string" ? item.arguments : JSON.stringify(item.arguments || {}),
+              index
+            }
+          ),
+jsxRuntimeExports.jsxs(BasicInfo, { title: "Function Call Meta", children: [
+jsxRuntimeExports.jsx(InfoItem, { label: "ID", value: item.id }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Namespace", value: item.namespace }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Status", value: item.status })
+          ] })
+        ]
+      },
+      index
+    );
+  }
+  function renderReasoningItem(item, index) {
+    const summary = Array.isArray(item.summary) ? item.summary : [];
+    const content = Array.isArray(item.content) ? item.content : [];
+    return jsxRuntimeExports.jsxs(
+      Section,
+      {
+        title: renderItemHeader("reasoning", index),
+        defaultOpen: false,
+        children: [
+jsxRuntimeExports.jsxs(BasicInfo, { title: "Reasoning", children: [
+jsxRuntimeExports.jsx(InfoItem, { label: "ID", value: item.id }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Encrypted Content", value: item.encrypted_content })
+          ] }),
+jsxRuntimeExports.jsx(Section, { title: `Summary (${summary.length})`, defaultOpen: true, children: summary.length ? summary.map((part, i) => jsxRuntimeExports.jsx(Section, { title: `summary #${i + 1}`, defaultOpen: i === summary.length - 1, children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: part }) }, i)) : jsxRuntimeExports.jsx("div", { className: "empty-state", children: "No summary" }) }),
+jsxRuntimeExports.jsx(Section, { title: `Content (${content.length})`, defaultOpen: false, children: content.length ? jsxRuntimeExports.jsx(JsonContent, { jsonObj: content }) : jsxRuntimeExports.jsx("div", { className: "empty-state", children: "No content" }) })
+        ]
+      },
+      index
+    );
+  }
+  function renderCallOutputs(item) {
+    if (item.result !== void 0) {
+      return jsxRuntimeExports.jsx(Section, { title: "Result", defaultOpen: true, children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: item.result }) });
+    }
+    if (item.outputs !== void 0) {
+      return jsxRuntimeExports.jsx(Section, { title: "Outputs", defaultOpen: true, children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: item.outputs }) });
+    }
+    if (item.results !== void 0) {
+      return jsxRuntimeExports.jsx(Section, { title: "Results", defaultOpen: true, children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: item.results }) });
+    }
+    if (item.action !== void 0) {
+      return jsxRuntimeExports.jsx(Section, { title: "Action", defaultOpen: true, children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: item.action }) });
+    }
+    return null;
+  }
+  function renderGenericOutputItem(item, index, type) {
+    return jsxRuntimeExports.jsxs(
+      Section,
+      {
+        title: renderItemHeader(type, index, item.status),
+        defaultOpen: false,
+        children: [
+jsxRuntimeExports.jsxs(BasicInfo, { title: "Item Info", children: [
+jsxRuntimeExports.jsx(InfoItem, { label: "ID", value: item.id }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Call ID", value: item.call_id }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Name", value: item.name }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Status", value: item.status })
+          ] }),
+          renderCallOutputs(item),
+          item.arguments !== void 0 ? jsxRuntimeExports.jsx(Section, { title: "Arguments", defaultOpen: false, children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: parseMaybeJson(item.arguments) }) }) : null,
+jsxRuntimeExports.jsx(Section, { title: "Raw Item", defaultOpen: false, children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: item }) })
+        ]
+      },
+      index
+    );
+  }
+  function renderOutputItem(item, index) {
+    const obj = asRecord(item);
+    const type = String(obj.type || "unknown");
+    if (type === "message") {
+      const content = Array.isArray(obj.content) ? obj.content : [];
+      return jsxRuntimeExports.jsxs(Message, { role: obj.role || "assistant", index, open: true, children: [
+jsxRuntimeExports.jsxs(BasicInfo, { title: "Message", children: [
+jsxRuntimeExports.jsx(InfoItem, { label: "ID", value: obj.id }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Status", value: obj.status }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Phase", value: obj.phase })
+        ] }),
+        renderOutputMessageContent(content)
+      ] }, index);
+    }
+    if (type === "function_call") {
+      return renderFunctionCallItem(obj, index);
+    }
+    if (type === "reasoning") {
+      return renderReasoningItem(obj, index);
+    }
+    if (type === "file_search_call" || type === "web_search_call" || type === "tool_search_call" || type === "tool_search_output" || type === "computer_call" || type === "computer_call_output" || type === "code_interpreter_call" || type === "image_generation_call" || type === "local_shell_call" || type === "local_shell_call_output" || type === "function_shell_call" || type === "function_shell_call_output" || type === "apply_patch_call" || type === "apply_patch_call_output" || type === "mcp_call" || type === "mcp_list_tools" || type === "mcp_approval_request" || type === "custom_tool_call" || type === "compaction") {
+      return renderGenericOutputItem(obj, index, type);
+    }
+    return jsxRuntimeExports.jsx(
+      Section,
+      {
+        title: renderItemHeader(type, index, obj.status),
+        defaultOpen: false,
+        children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: item })
+      },
+      index
+    );
+  }
+  const OpenAIResponsesResponseVisualizer = ({ response }) => {
+    const res = response;
+    const output = Array.isArray(res.output) ? res.output : [];
+    const usage = asRecord(res.usage);
+    const inputTokensDetails = asRecord(usage.input_tokens_details);
+    const outputTokensDetails = asRecord(usage.output_tokens_details);
+    return jsxRuntimeExports.jsxs("div", { className: "container responses-view", children: [
+jsxRuntimeExports.jsx("div", { className: "header", children: jsxRuntimeExports.jsx("h1", { children: "OpenAI Responses API Response" }) }),
+jsxRuntimeExports.jsxs(BasicInfo, { children: [
+jsxRuntimeExports.jsx(InfoItem, { label: "Response ID", value: res.id }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Model", value: res.model }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Object", value: res.object }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Status", value: res.status }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Created", value: res.created_at ? new Date(res.created_at * 1e3).toLocaleString("en-US") : void 0 }),
+jsxRuntimeExports.jsx(InfoItem, { label: "Parallel Tool Calls", value: res.parallel_tool_calls })
+      ] }),
+      typeof res.output_text === "string" && res.output_text.trim() && jsxRuntimeExports.jsx(Section, { title: "Output Text", defaultOpen: true, children: jsxRuntimeExports.jsx(ProseContent, { contentStr: res.output_text }) }),
+jsxRuntimeExports.jsx(Section, { title: "Usage", defaultOpen: true, children: res.usage ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+jsxRuntimeExports.jsxs("div", { className: "usage-grid", children: [
+jsxRuntimeExports.jsx(UsageItem, { label: "Input Tokens", value: usage.input_tokens }),
+jsxRuntimeExports.jsx(UsageItem, { label: "Output Tokens", value: usage.output_tokens }),
+jsxRuntimeExports.jsx(UsageItem, { label: "Total Tokens", value: usage.total_tokens }),
+jsxRuntimeExports.jsx(UsageItem, { label: "Cached Input Tokens", value: inputTokensDetails.cached_tokens }),
+jsxRuntimeExports.jsx(UsageItem, { label: "Reasoning Tokens", value: outputTokensDetails.reasoning_tokens })
+        ] }),
+jsxRuntimeExports.jsx(Section, { title: "Raw Usage", defaultOpen: false, children: jsxRuntimeExports.jsx(JsonContent, { jsonObj: res.usage }) })
+      ] }) : jsxRuntimeExports.jsx("div", { className: "empty-state", children: "No usage" }) }),
+jsxRuntimeExports.jsx(Section, { title: `Output (${output.length})`, defaultOpen: true, children: output.length ? output.map((item, index) => renderOutputItem(item, index)) : jsxRuntimeExports.jsx("div", { className: "empty-state", children: "No output" }) }),
+jsxRuntimeExports.jsx(Section, { title: "Error", defaultOpen: true, children: res.error ? jsxRuntimeExports.jsx(JsonContent, { jsonObj: res.error }) : jsxRuntimeExports.jsx("div", { className: "empty-state", children: "No error" }) }),
+jsxRuntimeExports.jsx(Section, { title: "Incomplete Details", defaultOpen: false, children: res.incomplete_details ? jsxRuntimeExports.jsx(JsonContent, { jsonObj: res.incomplete_details }) : jsxRuntimeExports.jsx("div", { className: "empty-state", children: "No incomplete details" }) }),
+jsxRuntimeExports.jsx(Section, { title: "Instructions", defaultOpen: false, children: res.instructions ? jsxRuntimeExports.jsx(JsonContent, { jsonObj: res.instructions }) : jsxRuntimeExports.jsx("div", { className: "empty-state", children: "No instructions" }) }),
+jsxRuntimeExports.jsx(Section, { title: "Metadata", defaultOpen: false, children: res.metadata ? jsxRuntimeExports.jsx(JsonContent, { jsonObj: res.metadata }) : jsxRuntimeExports.jsx("div", { className: "empty-state", children: "No metadata" }) })
+    ] });
+  };
   function isLLMResponse(parsedObj) {
     return !!parsedObj && !!parsedObj["choices"] && !!parsedObj["model"];
   }
@@ -14296,9 +15112,14 @@ jsxRuntimeExports.jsx(ChoicesSection, { choices: response.choices, eventCount })
       let json = await this.fetchFlowData(uuid, action, viewerName);
       const response = await this.parseResponseForView(json);
       console.log("OpenAI response to render:", response);
-      if (response) {
-        await this.renderReactComponent(OpenAIResponseVisualizer, { response });
+      if (!response) {
+        return;
       }
+      if (response.variant === "responses") {
+        await this.renderReactComponent(OpenAIResponsesResponseVisualizer, { response: response.response });
+        return;
+      }
+      await this.renderReactComponent(OpenAIResponseVisualizer, { response: response.response });
     }
     async parseResponseForView(json) {
       console.log("Parsing OpenAI response for view:", json);
@@ -14314,10 +15135,19 @@ jsxRuntimeExports.jsx(ChoicesSection, { choices: response.choices, eventCount })
     async parseJsonResponse(text) {
       try {
         const parsedObj = this.parseJSON(text);
+        if (isResponsesResponse(parsedObj)) {
+          return {
+            variant: "responses",
+            response: parsedObj
+          };
+        }
         if (!isLLMResponse(parsedObj)) {
           return null;
         }
-        return parsedObj;
+        return {
+          variant: "chat_completions",
+          response: parsedObj
+        };
       } catch (e) {
         console.error("Error parsing JSON response:", e);
         return null;
@@ -14326,6 +15156,21 @@ jsxRuntimeExports.jsx(ChoicesSection, { choices: response.choices, eventCount })
     async parseSSEJsonResponse(text) {
       try {
         console.log("Parsing SSE response text:", text);
+        const responseEvents = parseResponsesSSEEvents(text);
+        if (responseEvents.length > 0) {
+          const hasResponsesEvent = responseEvents.some(
+            (event) => typeof event?.type === "string" && event.type.startsWith("response.")
+          );
+          if (hasResponsesEvent) {
+            const response = processResponsesSSEEvents(responseEvents);
+            if (response) {
+              return {
+                variant: "responses",
+                response
+              };
+            }
+          }
+        }
         const events = [];
         text.split("\n").forEach((line) => {
           line = line.trim();
@@ -14350,7 +15195,10 @@ jsxRuntimeExports.jsx(ChoicesSection, { choices: response.choices, eventCount })
           }
         });
         if (events.length > 0) {
-          return processSSEEvents(events);
+          return {
+            variant: "chat_completions",
+            response: processSSEEvents(events)
+          };
         } else {
           return null;
         }
@@ -14536,13 +15384,6 @@ jsxRuntimeExports.jsx(ToolChoiceSection, { tool_choice: request.tool_choice }),
       await this.renderReactComponent(AnthropicRequestVisualizer, { request: parsedObj });
     }
   }
-  const UsageItem = ({ label, value }) => {
-    if (value === void 0 || value === null) return null;
-    return jsxRuntimeExports.jsxs("div", { className: "usage-item", children: [
-jsxRuntimeExports.jsx("div", { className: "usage-label", children: label }),
-jsxRuntimeExports.jsx("div", { className: "usage-value", children: value })
-    ] });
-  };
   const TextContentBlock = ({ block, index }) => {
     const [expanded, setExpanded] = reactExports.useState(true);
     return jsxRuntimeExports.jsxs("details", { open: expanded, className: "content-block", onChange: (e) => setExpanded(e.target.open), children: [
@@ -14977,6 +15818,7 @@ stop_reason: event.message.stop_reason,
       onUrlChange();
     };
     window.addEventListener("popstate", onUrlChange);
+    window.addEventListener("hashchange", onUrlChange);
   }
   async function getFlow(uuid) {
     const cacheKey = `mitmproxy-flow-${uuid}`;

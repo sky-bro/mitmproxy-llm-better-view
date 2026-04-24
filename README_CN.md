@@ -1,7 +1,7 @@
 # 更好地在 mitmproxy 中查看 LLM API（如 OpenAI Completion）的请求体和响应体
 
 ![对比图](./docs/compare-1.png)
-![](https://raw.githubusercontent.com/slow-groovin/mitmproxy-llm-better-view/refs/heads/main/docs/mitm-better-view.webp)
+![](https://raw.githubusercontent.com/sky-bro/mitmproxy-llm-better-view/refs/heads/main/docs/mitm-better-view.webp)
 
 [English README](README.md)
 
@@ -13,7 +13,7 @@
 ### 方式1：mitmproxy addon 脚本
 
 ```bash
-git clone https://github.com/slow-groovin/mitmproxy-llm-better-view.git
+git clone https://github.com/sky-bro/mitmproxy-llm-better-view.git
 ```
 
 在 `~/.mitmproxy/config.yaml` 中添加持久化配置：
@@ -34,6 +34,55 @@ scripts:
 1. 浏览器安装了好tampermonkey插件
 2. 通过浏览器打开[mitmweb-llm-better-view.user.js](https://raw.githubusercontent.com/sky-bro/mitmproxy-llm-better-view/refs/heads/main/tampermonkey-script/dist/mitmweb-llm-better-view.user.js)来安装tampermonkey脚本 
 
+## 开发指南
+
+### 环境要求
+
+- [Node.js](https://nodejs.org/)（v18+）
+- npm
+
+### 初始化
+
+```bash
+git clone https://github.com/sky-bro/mitmproxy-llm-better-view.git
+cd mitmproxy-llm-better-view/tampermonkey-script
+npm install
+```
+
+### 开发模式
+
+启动开发服务器（使用 [vite-plugin-monkey](https://github.com/lisonge/vite-plugin-monkey)）：
+
+```bash
+npm run dev
+```
+
+启动后在浏览器中打开终端输出的 URL，Tampermonkey 会提示安装一个开发版脚本，代码修改后会自动热重载。
+
+脚本默认匹配 `http://localhost:8081/*`（mitmweb 默认端口），测试前请确保 mitmweb 已启动。
+
+### 构建
+
+```bash
+npm run build
+```
+
+编译产物输出至 `dist/mitmweb-llm-better-view.user.js`。
+
+### 项目结构
+
+```text
+tampermonkey-script/
+├── src/
+│   ├── main.tsx                     # 入口文件
+│   └── components/
+│       ├── openai/                  # OpenAI API 可视化组件
+│       └── anthropic/               # Anthropic API 可视化组件
+├── dist/
+│   └── mitmweb-llm-better-view.user.js  # 构建产物
+└── vite.config.ts                   # 构建配置（vite-plugin-monkey）
+```
+
 ## 工作原理
 ### 方式1：mitmproxy addon 脚本
 
@@ -41,4 +90,4 @@ scripts:
 
 ### 方式2：Tampermonkey 脚本
 
-通过 JS 在页面内获取数据并渲染为静态 HTML，然后通过 iframe 嵌入页面显示。
+通过 JS 在页面内获取数据并渲染，然后嵌入 mitmweb 界面显示。

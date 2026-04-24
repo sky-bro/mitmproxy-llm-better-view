@@ -1,4 +1,3 @@
-// React imports are used in plugins, but not directly in main.tsx
 import { CallAction, Flow } from './types/mitmproxy';
 import { LRUCache, omit } from './utils/cache';
 import { getStyles } from './utils/cssUtils';
@@ -153,8 +152,9 @@ async function listenUrlChange(hook?: (flow: CallAction) => void) {
     onUrlChange();
   };
 
-  // Listen for popstate event (browser forward/back)
+  // Listen for popstate (back/forward) and hashchange (direct hash assignment)
   window.addEventListener('popstate', onUrlChange);
+  window.addEventListener('hashchange', onUrlChange);
 }
 
 /**

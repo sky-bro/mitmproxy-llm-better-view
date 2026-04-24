@@ -329,6 +329,36 @@ details[open].llm-better-view summary {
   color: #c2410c;
 }
 
+.llm-better-view .role-response-item {
+  background: #ecfeff;
+  color: #0f766e;
+}
+
+.llm-better-view .role-reasoning {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.llm-better-view .role-call-output {
+  background: #f0f9ff;
+  color: #0369a1;
+}
+
+.llm-better-view .role-search-call {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.llm-better-view .role-mcp {
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.llm-better-view .role-system-call {
+  background: #f8fafc;
+  color: #475569;
+}
+
 /* Role-specific content styling */
 .llm-better-view .system-message {
   background: #fefce8; /* Light yellow background */
@@ -975,6 +1005,65 @@ details[open].llm-better-view summary {
   max-width: 100%;
   word-break: break-word; /* Handle long anthropic content */
 }
+
+/* ── OpenAI Responses View Tweaks ──────────────────────────────── */
+.llm-better-view .responses-view {
+  font-size: 1.5rem;
+}
+
+.llm-better-view .responses-view .section {
+  background: #fdfefe;
+  border-color: #dbe4ef;
+}
+
+.llm-better-view .responses-view .section-header {
+  background: #f7fafc;
+}
+
+.llm-better-view .responses-view .section-header:hover {
+  background: #f1f5f9;
+}
+
+.llm-better-view .responses-view .section-content,
+.llm-better-view .responses-view .message-content,
+.llm-better-view .responses-view .tool-content,
+.llm-better-view .responses-view .prose,
+.llm-better-view .responses-view .info-label,
+.llm-better-view .responses-view .info-value {
+  font-size: 1.5rem;
+}
+
+.llm-better-view .responses-view .json-content {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  font-size: 1.3rem;
+}
+
+.llm-better-view .responses-view .choice-badge {
+  background: #0f766e;
+}
+
+.llm-better-view .responses-view .event-badge {
+  background: #0369a1;
+}
+
+.llm-better-view .responses-view .responses-item-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.llm-better-view .responses-view .responses-status-badge {
+  background: #e0f2fe;
+  color: #075985;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1;
+  border: 1px solid #bae6fd;
+}
+
 `;
 };
 

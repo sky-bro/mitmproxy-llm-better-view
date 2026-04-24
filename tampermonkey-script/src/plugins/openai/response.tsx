@@ -1,6 +1,13 @@
 import { BaseRenderer } from '../../core/renderer/base.tsx';
 import OpenAIResponseVisualizer from '../../components/openai/OpenAIResponseVisualizer';
 import { processSSEEvents, OpenAIChatCompletion, OpenAIChatCompletionChunk } from '../../types/api/openai';
+import OpenAIResponsesResponseVisualizer from '../../components/openai/OpenAIResponsesResponseVisualizer';
+import {
+  isResponsesResponse,
+  OpenAIResponsesResponse,
+  parseResponsesSSEEvents,
+  processResponsesSSEEvents
+} from '../../types/api/openai_responses';
 
 // Validation function specifically for OpenAI responses
 function isLLMResponse(parsedObj: any): boolean {
@@ -12,15 +19,25 @@ export class OpenAIResponseRenderer extends BaseRenderer {
 
   async render(uuid: string, action: 'request' | 'response', viewerName: string = "Auto"): Promise<void> {
     let json = await this.fetchFlowData(uuid, action, viewerName);
-    const response: OpenAIChatCompletion | null = await this.parseResponseForView(json);
+    const response = await this.parseResponseForView(json);
     console.log("OpenAI response to render:", response);
 
-    if (response) {
-      await this.renderReactComponent(OpenAIResponseVisualizer, { response: response });
+    if (!response) {
+      return;
     }
+
+    if (response.variant === 'responses') {
+      await this.renderReactComponent(OpenAIResponsesResponseVisualizer, { response: response.response });
+      return;
+    }
+
+    await this.renderReactComponent(OpenAIResponseVisualizer, { response: response.response });
   }
 
-  private async parseResponseForView(json: any): Promise<OpenAIChatCompletion | null> {
+  private async parseResponseForView(json: any): Promise<{
+    variant: 'chat_completions' | 'responses',
+    response: OpenAIChatCompletion | OpenAIResponsesResponse
+  } | null> {
     console.log("Parsing OpenAI response for view:", json);
     switch (json.view_name) {
       case "JSON":
@@ -32,22 +49,53 @@ export class OpenAIResponseRenderer extends BaseRenderer {
     }
   }
 
-  private async parseJsonResponse(text: string): Promise<OpenAIChatCompletion | null> {
+  private async parseJsonResponse(text: string): Promise<{
+    variant: 'chat_completions' | 'responses',
+    response: OpenAIChatCompletion | OpenAIResponsesResponse
+  } | null> {
     try {
       const parsedObj = this.parseJSON(text);
+      if (isResponsesResponse(parsedObj)) {
+        return {
+          variant: 'responses',
+          response: parsedObj as OpenAIResponsesResponse
+        };
+      }
       if (!isLLMResponse(parsedObj)) {
         return null;
       }
-      return parsedObj as OpenAIChatCompletion;
+      return {
+        variant: 'chat_completions',
+        response: parsedObj as OpenAIChatCompletion
+      };
     } catch (e) {
       console.error("Error parsing JSON response:", e);
       return null;
     }
   }
 
-  private async parseSSEJsonResponse(text: string): Promise<OpenAIChatCompletion | null> {
+  private async parseSSEJsonResponse(text: string): Promise<{
+    variant: 'chat_completions' | 'responses',
+    response: OpenAIChatCompletion | OpenAIResponsesResponse
+  } | null> {
     try {
       console.log("Parsing SSE response text:", text);
+      const responseEvents = parseResponsesSSEEvents(text);
+      if (responseEvents.length > 0) {
+        const hasResponsesEvent = responseEvents.some((event) =>
+          typeof event?.type === 'string' && event.type.startsWith('response.')
+        );
+        if (hasResponsesEvent) {
+          const response = processResponsesSSEEvents(responseEvents);
+          if (response) {
+            return {
+              variant: 'responses',
+              response
+            };
+          }
+        }
+      }
+
       const events: OpenAIChatCompletionChunk[] = [];
 
       // Parse SSE events from raw text format
@@ -80,7 +128,10 @@ export class OpenAIResponseRenderer extends BaseRenderer {
 
       // Process the collected events using the existing function
       if (events.length > 0) {
-        return processSSEEvents(events);
+        return {
+          variant: 'chat_completions',
+          response: processSSEEvents(events)
+        };
       } else {
         return null; // No response to render if no events
       }

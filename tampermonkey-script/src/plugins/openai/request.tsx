@@ -1,5 +1,7 @@
 import { BaseRenderer } from '../../core/renderer/base.tsx';
 import OpenAIRequestVisualizer from '../../components/openai/OpenAIRequestVisualizer';
+import OpenAIResponsesRequestVisualizer from '../../components/openai/OpenAIResponsesRequestVisualizer';
+import { isResponsesRequest } from '../../types/api/openai_responses';
 
 // Validation function specifically for OpenAI requests
 function isLLMRequest(parsedObj: any): boolean {
@@ -25,6 +27,10 @@ export class OpenAIRequestRenderer extends BaseRenderer {
     }
 
     if (!isLLMRequest(parsedObj)) {
+      if (!isResponsesRequest(parsedObj)) {
+        return;
+      }
+      await this.renderReactComponent(OpenAIResponsesRequestVisualizer, { request: parsedObj });
       return;
     }
 
